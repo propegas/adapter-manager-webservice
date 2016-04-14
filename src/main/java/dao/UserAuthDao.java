@@ -17,16 +17,14 @@
 
 package dao;
 
-import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-
-import models.UserAuth;
-
-import ninja.jpa.UnitOfWork;
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import models.UserAuth;
+import ninja.jpa.UnitOfWork;
+
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import java.util.List;
 
 
 public class UserAuthDao {
@@ -41,7 +39,7 @@ public class UserAuthDao {
             
             EntityManager entityManager = entityManagerProvider.get();
             
-            TypedQuery<UserAuth> q = entityManager.createQuery("SELECT x FROM UserAuth x WHERE username = :usernameParam", UserAuth.class);
+            TypedQuery<UserAuth> q = entityManager.createQuery("SELECT x FROM UserAuth x WHERE x.username = :usernameParam", UserAuth.class);
             UserAuth userAuth = getSingleResult(q.setParameter("usernameParam", username));
 
             if (userAuth != null) {

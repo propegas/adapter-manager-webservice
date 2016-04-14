@@ -208,17 +208,19 @@ public class ConfigFileController {
         Map saveFileContentResult = AdapterManager.saveConfigFileContent(configFile, adapter, configFileContent);
 
         if ((boolean) saveFileContentResult.get("result"))
-            context.getFlashScope().success("Config File Content saved: " + saveFileContentResult.get("text"));
+            context.getFlashScope().success("Config File Content saved.");
         else {
-            context.getFlashScope().error("Error while Config File Content saving");
+            context.getFlashScope().error("Error while Config File Content saving.");
             error = saveFileContentResult.get("text").toString();
         }
 
-        return Results.html()
-                .render("error", error)
-                .render(ADAPTER, adapter)
-                .render(CONFIG_FILE, configFile)
-                .template("views/ConfigFileController/configFileRawView.ftl.html");
+        return Results
+                //.render("error", error)
+                //.render(ADAPTER, adapter)
+                //.render(CONFIG_FILE, configFile)
+                //.render("content", configFileContent.getContent())
+                .redirect(String.format("/adapter/%d/configfile/%d/fileview", adapterId, confId));
+                //.template("views/ConfigFileController/configFiles.ftl.html");
 
 
     }

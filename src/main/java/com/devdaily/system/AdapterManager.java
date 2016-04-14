@@ -6,8 +6,10 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +30,7 @@ public class AdapterManager {
         // default
     }
 
-    public static String[] executeCommand(String command) throws SomeApplicationLevelException, InterruptedException {
+    public static String[] executeCommand(String command) throws SomeApplicationLevelException {
 
         logger.info("... IN executeCommand ...");
 
@@ -47,8 +49,9 @@ public class AdapterManager {
             logger.error("Command execution error: " + e);
             throw new SomeApplicationLevelException("Error while trying to build process for command execute.");
         } catch (InterruptedException e) {
-            logger.error("Command execution error: " + e);
-            throw e;
+            logger.error("Command execution interrupted: " + e);
+            Thread.currentThread().interrupt();
+            //throw e;
         }
 
         // get the stdout and stderr from the command that was run
@@ -137,8 +140,8 @@ public class AdapterManager {
         if (receivedSize <= 0)
             size = 100;
 
-        command = getShowLogCommand(size,type, adapter);
-        if (command == null){
+        command = getShowLogCommand(size, type, adapter);
+        if (command == null) {
             logger.error("No log file in config");
             map.put("text", "No log file in adapter config");
             map.put("result", false);
@@ -183,7 +186,7 @@ public class AdapterManager {
 
     public static Map<String, java.io.Serializable> startAdapter(Long id, Adapter adapter) {
         String command = adapter.getStartCommands();
-       logger.debug(String.format("**** Starting command for adapter %s: %s",
+        logger.debug(String.format("**** Starting command for adapter %s: %s",
                 adapter.title, command));
 
         Map<String, java.io.Serializable> map = new HashMap<>();
@@ -251,19 +254,84 @@ public class AdapterManager {
             return map;
         }
 
-
-
     }
 
     public static Map saveConfigFileContent(AdapterConfigFile configFile,
                                             Adapter adapter,
-                                            ConfigFileContent configFileContent) {
-        HashMap<String,Object> map = new HashMap<>();
+                                            ConfigFileContent configFileNewContent) {
 
-        map.put("text", "Success:" + configFileContent.getContent());
-        map.put("result", true);
+        String successText = "";
+        boolean isSucceeded = false;
+        HashMap<String, Object> map = new HashMap<>();
 
-        return map;
+        String currentFileName = configFile.getConfigFile();
+        String tempFileName = currentFileName + "_new";
+        String backupFileName = currentFileName + "_bak";
+
+        final File tempFile = new File(tempFileName);
+        final File curFile = new File(currentFileName);
+        final File bakFile = new File(backupFileName);
+
+        //String oldContent = configFile.getConfigFile();
+
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            logger.debug("Try to save New Raw content for file: " + currentFileName);
+
+            //String contentFromFile = IOUtils.toString(fos, "ISO-8859-1");
+
+            logger.debug("Raw New content of file for saving: " + configFileNewContent.getContent());
+
+            // if file doesnt exists, then create it
+            if (!tempFile.exists()) {
+                tempFile.createNewFile();
+            }
+
+            // get the content in bytes
+            byte[] contentInBytes = configFileNewContent.getContent().getBytes("ISO-8859-1");
+
+            fos.write(contentInBytes);
+            fos.flush();
+            fos.close();
+
+            isSucceeded = true;
+            successText += "Done";
+
+            // backup current file
+            if (curFile.renameTo(bakFile)) {
+                logger.info("Current file renamed to: " + backupFileName);
+                successText += "\nCurrent file renamed to: " + backupFileName;
+            } else {
+                logger.error("Error while Current file renaming");
+                successText += "\nError while Current file renaming";
+                isSucceeded = false;
+            }
+            // rename temp file
+            if (tempFile.renameTo(curFile)) {
+                logger.info("Temp file saved to: " + currentFileName);
+                successText += "\nTemp file saved to: " + currentFileName;
+            } else {
+                logger.error("Error while Temp file renaming");
+                successText += "\nError while Temp file renaming";
+                isSucceeded = false;
+            }
+            //map.put("result", true);
+            //return map;
+
+        } catch (IOException | SecurityException e) {
+            logger.error("Error while saving File: " + e);
+            isSucceeded = false;
+            successText += "Error while saving File: " + e;
+        }
+
+        if (isSucceeded) {
+            map.put("text", successText);
+            map.put("result", true);
+            return map;
+        } else {
+            map.put("text", successText);
+            map.put("result", false);
+            return map;
+        }
 
     }
 

@@ -21,10 +21,9 @@
 <#if adapterConfigFiles??>
     <#list adapterConfigFiles as adapterConfigFile>
         <hr>
-
-        <h4>Config file</h4>
-        <p class="">${i18n("adapterConfigFile.fileName")}: ${adapterConfigFile.configFile}</p>
-        <p class="">${i18n("adapterConfigFile.description")}: ${adapterConfigFile.configDescription!""}</p>
+        <h3><a class="alert-info" href="/adapter/${adapter.id}/configfile/${adapterConfigFile.id}/fileview">${adapterConfigFile.configFile}</a>
+        </h3>
+        <p class="container">${i18n("adapterConfigFile.description")}: ${adapterConfigFile.configDescription!""}</p>
         <h4>
             <a href="/adapter/${adapter.id}/configfile/${adapterConfigFile.id}/edit">${i18n("adapterConfigFile.editConfig")}</a>
             |
@@ -32,12 +31,14 @@
             |
             <a href="/adapter/${adapter.id}/configfile/${adapterConfigFile.id}/delete">${i18n("adapterConfigFile.deleteConfig")}</a>
         </h4>
-
-        <h4>
-            <a href="/adapter/${adapter.id}/configfile/${adapterConfigFile.id}/fileview">${i18n("adapterConfigFile.showRawConfigFile")}</a>
-            |
-            <a href="/adapter/${adapter.id}/configfile/${adapterConfigFile.id}/fileedit">${i18n("adapterConfigFile.editRawConfigFile")}</a>
-        </h4>
+        <!--
+                <h4>
+                    <a href="/adapter/${adapter.id}/configfile/${adapterConfigFile.id}/fileview">${i18n("adapterConfigFile.showRawConfigFile")}</a>
+                    |
+                    <a href="/adapter/${adapter.id}/configfile/${adapterConfigFile.id}/fileedit">${i18n("adapterConfigFile.editRawConfigFile")}</a>
+                </h4>
+                -->
+        <hr>
         <h4>
             <a href="/adapter/${adapter.id}/configfile/${adapterConfigFile.id}/readfromfile">${i18n("adapterConfigFile.readFromFile")}</a>
         </h4>
