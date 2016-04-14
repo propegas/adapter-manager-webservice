@@ -266,7 +266,6 @@ public class AdapterManager {
     }
 
     public static Map saveConfigFileContent(AdapterConfigFile configFile,
-                                            Adapter adapter,
                                             ConfigFileContent configFileNewContent) {
 
         String successText = "";
@@ -282,17 +281,11 @@ public class AdapterManager {
         String backupFileName = currentFileName + "_" + dateSuffix;
 
         final File tempFile = new File(tempFileName);
-        final File curFile = new File(currentFileName);
-        final File bakFile = new File(backupFileName);
 
-        //String oldContent = configFile.getConfigFile();
         FileSystem fileSystem = null;
 
         try (FileOutputStream fos = new FileOutputStream(tempFile)) {
             logger.debug("Try to save New Raw content for file: " + currentFileName);
-
-            //String contentFromFile = IOUtils.toString(fos, "ISO-8859-1");
-
             logger.debug("Raw New content of file for saving: " + configFileNewContent.getContent());
 
             // if file doesnt exists, then create it

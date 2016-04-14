@@ -123,7 +123,7 @@ public class Routes implements ApplicationRoutes {
         router.GET().route("/api/adapter/{id}/configfile/{confid}.json").with(ApiController.class, "getConfigFileJson");
         router.POST().route("/api/adapter/{id}/configfile.json").with(ApiController.class, "postConfigFileJson");
         router.GET().route("/api/adapter/{id}/configfile/{confid}/getrawcontent.json").with(ApiController.class, "getConfigFileRawContentJson");
-        router.GET().route("/api/adapter/{id}/configfile/{confid}/postrawcontent.json").with(ApiController.class, "postConfigFileRawContentJson");
+        router.POST().route("/api/adapter/{id}/configfile/{confid}/postrawcontent.json").with(ApiController.class, "postConfigFileRawContentJson");
         ///////////////////////////////////////////////////////////////////////
         // Show adapter config files
         ///////////////////////////////////////////////////////////////////////
@@ -139,8 +139,18 @@ public class Routes implements ApplicationRoutes {
         // Get raw config file
         ///////////////////////////////////////////////////////////////////////
         router.GET().route("/adapter/{id}/configfile/{confid}/fileview").with(ConfigFileController.class, "configFileRawView");
+
+        ///////////////////////////////////////////////////////////////////////
+        // Edit and ave raw config file
+        ///////////////////////////////////////////////////////////////////////
         router.GET().route("/adapter/{id}/configfile/{confid}/fileedit").with(ConfigFileController.class, "configFileRawEdit");
         router.POST().route("/adapter/{id}/configfile/{confid}/fileedit").with(ConfigFileController.class, "configFileRawEditPost");
+
+        ///////////////////////////////////////////////////////////////////////
+        // Delete raw config file
+        ///////////////////////////////////////////////////////////////////////
+        router.GET().route("/adapter/{id}/configfile/{confid}/delete").with(ConfigFileController.class, "configFileRawDelete");
+        router.POST().route("/adapter/{id}/configfile/{confid}/delete").with(ConfigFileController.class, "configFileRawDeletePost");
 
         ///////////////////////////////////////////////////////////////////////
         // Assets (pictures / javascript)

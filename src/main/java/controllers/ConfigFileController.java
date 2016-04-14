@@ -205,7 +205,7 @@ public class ConfigFileController {
         AdapterConfigFile configFile = adapterConfigFileDao.getConfigFile(adapterId, confId);
 
         String error = null;
-        Map saveFileContentResult = AdapterManager.saveConfigFileContent(configFile, adapter, configFileContent);
+        Map saveFileContentResult = AdapterManager.saveConfigFileContent(configFile, configFileContent);
 
         if ((boolean) saveFileContentResult.get("result"))
             context.getFlashScope().success("Config File Content saved.");

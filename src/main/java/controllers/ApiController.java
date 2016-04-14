@@ -17,6 +17,7 @@
 package controllers;
 
 import com.devdaily.system.AdapterManager;
+import com.devdaily.system.ConfigFileContent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import dao.AdapterConfigFileDao;
@@ -312,5 +313,30 @@ public class ApiController {
                     .render("Message", rawConfigFileResult.get("text"));
         }
 
+    }
+
+    @FilterWith(SecureFilter.class)
+    public Result postConfigFileRawContentJson(@PathParam("id") Long adapterId,
+                                               @PathParam("confid") Long confId,
+                                               ConfigFileContent configFileContent) {
+
+        logger.debug("[TEST] configFileContent: " + configFileContent);
+        logger.debug("[TEST] adapterId: " + adapterId);
+
+        AdapterConfigFile configFile = configFileDao.getConfigFile(adapterId, confId);
+        String confFile = configFile.getConfigFile();
+        if (confFile == null || "".equals(confFile.trim()))
+            return Results.notFound().render(RESULT_FIELD_NAME, "Error");
+
+        Map rawConfigFileResult = AdapterManager.saveConfigFileContent(configFile, configFileContent);
+        if ((boolean) rawConfigFileResult.get("result")) {
+            return Results.json()
+                    .render("Message", rawConfigFileResult.get("text"))
+                    .render(RESULT_FIELD_NAME, "Success");
+        } else {
+            return Results.notFound().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("Message", rawConfigFileResult.get("text"));
+        }
     }
 }
