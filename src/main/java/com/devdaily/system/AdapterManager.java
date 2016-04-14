@@ -11,7 +11,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -264,9 +267,13 @@ public class AdapterManager {
         boolean isSucceeded = false;
         HashMap<String, Object> map = new HashMap<>();
 
+        DateFormat dateFormat = new SimpleDateFormat("ddMMyyyyHHmmss");
+        Date date = new Date();
+        String dateSuffix = dateFormat.format(date);
+
         String currentFileName = configFile.getConfigFile();
         String tempFileName = currentFileName + "_new";
-        String backupFileName = currentFileName + "_bak";
+        String backupFileName = currentFileName + "_" + dateSuffix;
 
         final File tempFile = new File(tempFileName);
         final File curFile = new File(currentFileName);
