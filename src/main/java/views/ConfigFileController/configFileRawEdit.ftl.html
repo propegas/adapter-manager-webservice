@@ -9,7 +9,7 @@
 
     <#if adapter??>
         <div class="container">
-            <h1>${adapter.title}</h1>
+            <h1><a href="/adapter/${adapter.id}/configfiles">${adapter.title}</a></h1>
             <#if configFile??>
                 <h2>${configFile.configFile}</h2>
                 <p>${configFile.configDescription}
@@ -29,7 +29,7 @@
                                           rows="30">${content}</textarea>
                             </div>
                             <div class="row">
-                                <input class="btn btn-success" type="submit" value="${i18n(" configFileRawEdit.saveContentConfigFile")}" />
+                                <input class="btn btn-success" type="submit" value="${i18n("configFileRawEdit.saveContentConfigFile")}" />
                             </div>
                         </div>
 

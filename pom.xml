@@ -17,7 +17,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <ninja.version>5.4.0</ninja.version>
-        <jetty.version>9.2.10.v20150310</jetty.version>
+        <jetty.version>9.2.15.v20160210</jetty.version>
 
         <camel-version>2.15.3</camel-version>
         <project.build.targetName>adaptersManager</project.build.targetName>

@@ -11,6 +11,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,6 +41,7 @@ public class AdapterManager {
     public static String[] executeCommand(String command) throws SomeApplicationLevelException {
 
         logger.info("... IN executeCommand ...");
+        logger.info("... Command: " + command);
 
         // build the system command we want to run
         List<String> commands = new ArrayList<>();
@@ -49,10 +55,10 @@ public class AdapterManager {
         try {
             result = commandExecutor.executeCommand();
         } catch (IOException e) {
-            logger.error("Command execution error: " + e);
+            logger.error("Command execution error: " + e, e);
             throw new SomeApplicationLevelException("Error while trying to build process for command execute.");
         } catch (InterruptedException e) {
-            logger.error("Command execution interrupted: " + e);
+            logger.error("Command execution interrupted: " + e, e);
             Thread.currentThread().interrupt();
             //throw e;
         }
@@ -160,7 +166,7 @@ public class AdapterManager {
         try {
             fullOutput = AdapterManager.executeCommand(command);
         } catch (Exception e) {
-            logger.error("Error while executing command: " + e);
+            logger.error("Error while executing command: " + e, e);
             map.put("text", e.getCause() + " " + e.getMessage() + " " + e.toString());
             map.put("result", false);
             return map;
@@ -280,6 +286,7 @@ public class AdapterManager {
         final File bakFile = new File(backupFileName);
 
         //String oldContent = configFile.getConfigFile();
+        FileSystem fileSystem = null;
 
         try (FileOutputStream fos = new FileOutputStream(tempFile)) {
             logger.debug("Try to save New Raw content for file: " + currentFileName);
@@ -301,33 +308,32 @@ public class AdapterManager {
             fos.close();
 
             isSucceeded = true;
-            successText += "Done";
+            successText += "File saved.";
 
             // backup current file
-            if (curFile.renameTo(bakFile)) {
-                logger.info("Current file renamed to: " + backupFileName);
-                successText += "\nCurrent file renamed to: " + backupFileName;
-            } else {
-                logger.error("Error while Current file renaming");
-                successText += "\nError while Current file renaming";
-                isSucceeded = false;
-            }
-            // rename temp file
-            if (tempFile.renameTo(curFile)) {
-                logger.info("Temp file saved to: " + currentFileName);
-                successText += "\nTemp file saved to: " + currentFileName;
-            } else {
-                logger.error("Error while Temp file renaming");
-                successText += "\nError while Temp file renaming";
-                isSucceeded = false;
-            }
-            //map.put("result", true);
-            //return map;
+            fileSystem = FileSystems.getDefault();
+            Path from;
+            Path to;
+            from = fileSystem.getPath(currentFileName);
+            to = fileSystem.getPath(backupFileName);
+            Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
+
+            from = fileSystem.getPath(tempFileName);
+            to = fileSystem.getPath(currentFileName);
+            Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
 
         } catch (IOException | SecurityException e) {
-            logger.error("Error while saving File: " + e);
+            logger.error("Error while saving File: " + e, e);
             isSucceeded = false;
-            successText += "Error while saving File: " + e;
+            successText += "\nError while saving File: " + e;
+        } finally {
+            if (fileSystem != null) {
+                try {
+                    fileSystem.close();
+                } catch (IOException|UnsupportedOperationException e) {
+                    logger.error("Error while close FileSystem: " + e, e);
+                }
+            }
         }
 
         if (isSucceeded) {

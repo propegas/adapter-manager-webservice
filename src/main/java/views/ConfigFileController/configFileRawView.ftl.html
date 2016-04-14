@@ -9,7 +9,7 @@
 
     <#if adapter??>
         <#if configFile??>
-            <h1>${adapter.title}</h1>
+            <h1><a href="/adapter/${adapter.id}/configfiles">${adapter.title}</a></h1>
 
             <h2>${configFile.configFile}</h2>
             <p>${configFile.configDescription}

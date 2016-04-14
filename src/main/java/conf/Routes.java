@@ -123,7 +123,7 @@ public class Routes implements ApplicationRoutes {
         router.GET().route("/api/adapter/{id}/configfile/{confid}.json").with(ApiController.class, "getConfigFileJson");
         router.POST().route("/api/adapter/{id}/configfile.json").with(ApiController.class, "postConfigFileJson");
         router.GET().route("/api/adapter/{id}/configfile/{confid}/getrawcontent.json").with(ApiController.class, "getConfigFileRawContentJson");
-
+        router.GET().route("/api/adapter/{id}/configfile/{confid}/postrawcontent.json").with(ApiController.class, "postConfigFileRawContentJson");
         ///////////////////////////////////////////////////////////////////////
         // Show adapter config files
         ///////////////////////////////////////////////////////////////////////
