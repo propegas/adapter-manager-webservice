@@ -1,0 +1,23 @@
+<#import "../layout/defaultLayout.ftl.html" as layout>
+    <@layout.myLayout "Home page">
+
+    <#if olderAdapters??>
+
+        <#list olderAdapters as adapter>
+            <h3>
+                <a href="/adapter/${adapter.id}">${adapter.title}</a>
+            </h3>
+            <#if adapter.status="Running">
+                <p>Status: <span class="alert-success">${adapter.status}</span></p>
+            </#if>
+            <#if adapter.status="Stopped">
+                <p>Status: <span class="alert-danger">${adapter.status}</span></p>
+            </#if>
+            <#if adapter.status="Unknown">
+                <p>Status: <span class="alert-warning">${adapter.status}</span></p>
+            </#if>
+        </#list>
+
+    </#if>
+
+</@layout.myLayout>

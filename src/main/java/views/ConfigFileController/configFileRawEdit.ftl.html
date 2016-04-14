@@ -1,0 +1,51 @@
+<#import "../layout/defaultLayout.ftl.html" as layout>
+    <@layout.myLayout "Home page">
+
+    <#if (error)??>
+        <div class="alert alert-danger">
+            <#noescape>${error?html?replace("\n", "<br>")}</#noescape>
+        </div>
+    </#if>
+
+    <#if adapter??>
+        <div class="container">
+            <h1>${adapter.title}</h1>
+            <#if configFile??>
+                <h2>${configFile.configFile}</h2>
+                <p>${configFile.configDescription}
+
+                <div class="row">
+
+                    <form action="/adapter/${adapter.id}/configfile/${configFile.id}/fileedit" method="post" class="form-horizontal"
+                          role="form">
+                        <div class="form-group">
+                            <div class="row">
+                                <label for="content"
+                                       class="row-lg-3 control-label">${i18n("configFileRawView.fileContent")}</label>
+
+                            </div>
+                            <div class="row">
+                                <textarea name="content" class="form-control" id="content"
+                                          rows="30">${content}</textarea>
+                            </div>
+                            <div class="row">
+                                <input class="btn btn-success" type="submit" value="${i18n(" configFileRawEdit.saveContentConfigFile")}" />
+                            </div>
+                        </div>
+
+
+
+                    </form>
+
+                </div>
+
+
+                <#else>
+                    <p>Sorry. Post not found. Please go back to <a href="/index">index</a></p>
+
+            </#if>
+        </div>
+    </#if>
+
+
+</@layout.myLayout>

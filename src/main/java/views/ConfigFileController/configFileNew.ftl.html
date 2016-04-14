@@ -1,0 +1,55 @@
+<#import "../layout/defaultLayout.ftl.html" as layout> <@layout.myLayout i18n("configFileNew.pageTitle")>
+
+
+    <script defer type="text/javascript">
+        $(window).load(function () {
+            tinyMCE.init({
+                mode: "textareas"
+            });
+        });
+    </script>
+
+    <#if adapter??>
+
+        <div class="container">
+
+            <h1>${i18n("configFileNew.newConfigFile")}</h1>
+
+            <!-- Example row of columns -->
+            <div class="row">
+                <div class="col-lg-9">
+                    <form action="/adapter/${adapter.id}/configfile/new" method="post" class="form-horizontal"
+                          role="form">
+
+                        <input type="hidden" name="adapterId" id="adapterId" value="${adapter.id}">
+
+                        <div class="form-group">
+                            <label for="configFile"
+                                   class="col-lg-3 control-label">${i18n("configFileNew.configFile")}</label>
+                            <div class="col-lg-9">
+                                <input class="form-control" type="text" name="configFile" id="configFile" value="${(flash.configFile!"")}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="configDescription" class="col-lg-3 control-label">${i18n("configFileNew.configDescription")}</label>
+                            <div class="col-lg-9">
+                                <textarea name="configDescription" class="form-control" id="configDescription">${(flash.configDescription!"")}</textarea>
+                            </div>
+                        </div>
+
+
+                        <input type="submit" value="${i18n("configFileNew.postNewConfigFile")}" class="btn btn-success
+                        pull-right" />
+
+                    </form>
+
+                </div>
+
+            </div>
+        </div>
+        <#else>Adapter not Found
+    </#if>
+
+
+</@layout.myLayout>
