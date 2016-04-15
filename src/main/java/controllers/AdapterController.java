@@ -140,7 +140,6 @@ public class AdapterController {
 
     }
 
-
     ///////////////////////////////////////////////////////////////////////////
     // Duplicate adapter
     ///////////////////////////////////////////////////////////////////////////
@@ -187,9 +186,7 @@ public class AdapterController {
         Adapter adapter = null;
 
         if (id != null) {
-
             adapter = adapterDao.getAdapter(id);
-
         }
 
         adapterDao.deleteAdapter(id, adapter);

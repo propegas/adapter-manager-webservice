@@ -10,8 +10,17 @@ public class AdapterConfigFileDto {
     @NotNull
     public String configFile;
 
-    public String configDescription = "";
+    private String configDescription = "";
 
-    public AdapterConfigFileDto() {}
+    public AdapterConfigFileDto() {
+        //default
+    }
 
+    public String getConfigDescription() {
+        return configDescription;
+    }
+
+    public void setConfigDescription(String configDescription) {
+        this.configDescription = configDescription;
+    }
 }

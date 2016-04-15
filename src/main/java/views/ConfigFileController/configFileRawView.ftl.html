@@ -7,9 +7,7 @@
         </div>
     </#if>
 
-    <#if adapter??>
-        <#if configFile??>
-            <h1><a href="/adapter/${adapter.id}/configfiles">${adapter.title}</a></h1>
+    <#if adapter?? && configFile??>
 
             <h2>${configFile.configFile}</h2>
             <p>${configFile.configDescription}
@@ -30,7 +28,6 @@
             <#else>
                 <p>Sorry. Post not found. Please go back to <a href="/index">index</a></p>
 
-        </#if>
     </#if>
 
 

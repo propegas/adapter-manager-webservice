@@ -18,7 +18,6 @@ package controllers;
 
 import com.devdaily.system.AdapterManager;
 import com.devdaily.system.ConfigFileContent;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import dao.AdapterConfigFileDao;
 import dao.AdapterDao;
@@ -42,7 +41,6 @@ import ninja.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Map;
 
 public class ApiController {
@@ -73,7 +71,7 @@ public class ApiController {
     public Result getAdapterLogJson(@PathParam("id") Long id,
                                     @Param("size") int size,
                                     @Param("type") String type
-                                    ) {
+    ) {
 
         Adapter adapter = null;
 
@@ -155,28 +153,10 @@ public class ApiController {
     @Param("password") String password,
     @Param("rememberMe") Boolean rememberMe,
      */
-    public Result apiLoginPost(Context context) {
+    public Result apiLoginPost(UserAuth userAuth,
+                               Context context) {
 
-        String jsonInString = null;
-        try {
-            // get JSON from http body
-            StringBuilder buffer = new StringBuilder();
-            while ((jsonInString = context.getReader().readLine()) != null) {
-                buffer.append(jsonInString);
-            }
-            jsonInString = buffer.toString();
-        } catch (IOException e) {
-            logger.error("Error while get UserAuth JSON: " + e);
-        }
-        ObjectMapper mapper = new ObjectMapper();
-        UserAuth userAuth = null;
-        try {
-            userAuth = mapper.readValue(jsonInString, UserAuth.class);
-        } catch (IOException e) {
-            logger.error("Error while parse UserAuth JSON to UserAuth Object: " + e);
-        }
-
-        logger.info("**** result: " + jsonInString);
+        logger.debug("**** userAuth: " + userAuth);
         if (userAuth != null) {
             logger.info("**** userAuth.username: " + userAuth.username);
 
@@ -275,7 +255,7 @@ public class ApiController {
 
     @FilterWith(SecureFilter.class)
     public Result postConfigFileJson(@PathParam("id") Long adapterId,
-                                  AdapterConfigFileDto configFileDto) {
+                                     AdapterConfigFileDto configFileDto) {
 
         logger.debug("[TEST] configFileDto: " + configFileDto);
         logger.debug("[TEST] adapterId: " + adapterId);

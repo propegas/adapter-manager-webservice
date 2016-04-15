@@ -24,6 +24,8 @@ import models.AdapterDto;
 import models.AdaptersDto;
 import models.UserAuth;
 import ninja.jpa.UnitOfWork;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -31,6 +33,8 @@ import javax.persistence.TypedQuery;
 import java.util.List;
 
 public class AdapterDao {
+
+    static final Logger logger = LoggerFactory.getLogger(AdapterDao.class);
 
     @Inject
     Provider<EntityManager> entityManagerProvider;
@@ -124,16 +128,13 @@ public class AdapterDao {
     @Transactional
     public boolean saveAdapter(Long id, String username, AdapterDto adapterDto) {
 
-        Adapter adapter = null;
+        Adapter adapter;
         EntityManager entityManager = entityManagerProvider.get();
 
         if (id != null) {
 
-
             Query selectAdapter = entityManager.createQuery("SELECT x FROM Adapter x WHERE x.id = :idParam");
             adapter = (Adapter) selectAdapter.setParameter("idParam", id).getSingleResult();
-
-            //adapter = getConfigFile(id);
 
             Query selectUser = entityManager.createQuery("SELECT x FROM UserAuth x WHERE x.username = :usernameParam");
             UserAuth userAuth = (UserAuth) selectUser.setParameter("usernameParam", username).getSingleResult();
@@ -164,31 +165,19 @@ public class AdapterDao {
     @Transactional
     public boolean updateStatus(Long id, String newStatus) {
 
-        Adapter adapter = null;
+        Adapter adapter;
         EntityManager entityManager = entityManagerProvider.get();
-        int result = 0;
 
         if (id != null) {
 
             Query selectAdapter = entityManager.createQuery("SELECT x FROM Adapter x WHERE x.id = :idParam");
             adapter = (Adapter) selectAdapter.setParameter("idParam", id).getSingleResult();
 
-            System.out.println("Updating status..." + id);
-            /*
-            Query updateAdapter = entityManager.createQuery("UPDATE Adapter x " +
-                    "SET x.status = :newStatus " +
-                    "WHERE x.id = :idParam");
-            result = updateAdapter
-                    .setParameter("newStatus", newStatus)
-                    .setParameter("idParam", id)
-                    .executeUpdate();
+            logger.debug("Updating status for adapter " + id);
 
-*/
             adapter.setStatus(newStatus);
-            //entityManager.persist(adapter);
             entityManager.flush();
             entityManager.refresh(adapter);
-            // entityManager.remove();
             return true;
         }
 
@@ -205,14 +194,10 @@ public class AdapterDao {
             Query selectAdapter = entityManager.createQuery("SELECT x FROM Adapter x WHERE x.id = :idParam");
             Adapter adapterDb = (Adapter) selectAdapter.setParameter("idParam", id).getSingleResult();
 
-            //entityManager.remove(adapter);
-            System.out.println("Remove Adapter: " + id + " Title: " + adapter.title);
+            logger.debug("Remove Adapter: " + id + " Title: " + adapter.title);
             entityManager.remove(adapterDb);
 
-            //entityManager.flush();
         }
     }
-
-    //@UnitOfWork
 
 }

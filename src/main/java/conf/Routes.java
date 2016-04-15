@@ -141,16 +141,22 @@ public class Routes implements ApplicationRoutes {
         router.GET().route("/adapter/{id}/configfile/{confid}/fileview").with(ConfigFileController.class, "configFileRawView");
 
         ///////////////////////////////////////////////////////////////////////
-        // Edit and ave raw config file
+        // Edit and save raw config file
         ///////////////////////////////////////////////////////////////////////
         router.GET().route("/adapter/{id}/configfile/{confid}/fileedit").with(ConfigFileController.class, "configFileRawEdit");
         router.POST().route("/adapter/{id}/configfile/{confid}/fileedit").with(ConfigFileController.class, "configFileRawEditPost");
 
         ///////////////////////////////////////////////////////////////////////
-        // Delete raw config file
+        // Delete config file
         ///////////////////////////////////////////////////////////////////////
-        router.GET().route("/adapter/{id}/configfile/{confid}/delete").with(ConfigFileController.class, "configFileRawDelete");
-        router.POST().route("/adapter/{id}/configfile/{confid}/delete").with(ConfigFileController.class, "configFileRawDeletePost");
+        router.GET().route("/adapter/{id}/configfile/{confid}/delete").with(ConfigFileController.class, "configFileDelete");
+        router.POST().route("/adapter/{id}/configfile/{confid}/delete").with(ConfigFileController.class, "configFileDeletePost");
+
+        ///////////////////////////////////////////////////////////////////////
+        // Edit config file
+        ///////////////////////////////////////////////////////////////////////
+        router.GET().route("/adapter/{id}/configfile/{confid}/edit").with(ConfigFileController.class, "configFileEdit");
+        router.POST().route("/adapter/{id}/configfile/{confid}/edit").with(ConfigFileController.class, "configFileEditPost");
 
         ///////////////////////////////////////////////////////////////////////
         // Assets (pictures / javascript)

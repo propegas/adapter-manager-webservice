@@ -109,7 +109,7 @@ public class ApiControllerTest extends NinjaTest {
         AdapterConfigFileDto configFileDto = new AdapterConfigFileDto();
         configFileDto.adapterId = (long) 1;
         configFileDto.configFile = "/test/test/123.conf";
-        configFileDto.configDescription = "Описание";
+        configFileDto.setConfigDescription("Описание");
 
         response = ninjaTestBrowser.postJson(getServerAddress()
                 + "api/adapter/1/configfile.json", configFileDto);
