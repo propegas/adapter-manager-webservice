@@ -34,13 +34,17 @@ import ninja.SecureFilter;
 import ninja.params.PathParam;
 import ninja.validation.JSR303Validation;
 import ninja.validation.Validation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.persistence.NoResultException;
 import java.util.List;
 import java.util.Map;
 
 @Singleton
 public class ConfigFileController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ConfigFileController.class);
     private static final String ADAPTER = "adapter";
     private static final String CONFIG_FILE = "configFile";
 
@@ -197,11 +201,6 @@ public class ConfigFileController {
                                         Context context,
                                         ConfigFileContent configFileContent) {
 
-        Adapter adapter = null;
-        if (adapterId != null) {
-            adapter = adapterDao.getAdapter(adapterId);
-        }
-
         AdapterConfigFile configFile = adapterConfigFileDao.getConfigFile(adapterId, confId);
 
         String error = null;
@@ -215,13 +214,101 @@ public class ConfigFileController {
         }
 
         return Results
-                //.render("error", error)
+               // .render("error", error)
                 //.render(ADAPTER, adapter)
                 //.render(CONFIG_FILE, configFile)
                 //.render("content", configFileContent.getContent())
-                .redirect(String.format("/adapter/%d/configfile/%d/fileview", adapterId, confId));
-                //.template("views/ConfigFileController/configFiles.ftl.html");
+                .redirect(String.format("/adapter/%d/configfile/%d/fileview", adapterId, confId))
+                .render("error", error);
 
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Delete Config file configuration
+    ///////////////////////////////////////////////////////////////////////////
+    @FilterWith(SecureFilter.class)
+    public Result configFileDelete(@PathParam("id") Long adapterId,
+                                   @PathParam("confid") Long confId) {
+
+        Adapter adapter = null;
+
+        if (adapterId != null) {
+            adapter = adapterDao.getAdapter(adapterId);
+        }
+
+        AdapterConfigFile configFile = adapterConfigFileDao.getConfigFile(adapterId, confId);
+
+        return Results.html()
+                .render(ADAPTER, adapter)
+                .render(CONFIG_FILE, configFile)
+                .render("status", "test");
+
+    }
+
+    @FilterWith(SecureFilter.class)
+    public Result configFileDeletePost(@PathParam("id") Long adapterId,
+                                       @PathParam("confid") Long confId,
+                                       Context context) {
+
+        boolean succeed = adapterConfigFileDao.deleteConfigFile(adapterId, confId);
+
+        if (succeed)
+            context.getFlashScope().success("Config File deleted from DB.");
+        else
+            context.getFlashScope().error("Error while deleted Config File from DB.");
+
+        return Results.redirect("/");
+
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Edit adapter
+    ///////////////////////////////////////////////////////////////////////////
+    @FilterWith(SecureFilter.class)
+    public Result configFileEdit(@PathParam("id") Long adapterId,
+                                 @PathParam("confid") Long confId,
+                                 Context context) {
+
+        AdapterConfigFile configFile;
+
+        if (adapterId != null && confId != null) {
+
+            Adapter adapter = adapterDao.getAdapter(adapterId);
+            configFile = adapterConfigFileDao.getConfigFile(adapterId, confId);
+            context.getFlashScope().put("configFile", configFile.getConfigFile());
+            context.getFlashScope().put("configDescription", configFile.getConfigDescription());
+            return Results.html()
+                    .render(ADAPTER,adapter)
+                    .render(CONFIG_FILE, configFile);
+        }
+
+        String errorMessage = "Adapter ID or ConfigFile ID not found in DB";
+
+        logger.error(errorMessage, new NoResultException());
+        return Results.notFound();
+    }
+
+    @FilterWith(SecureFilter.class)
+    public Result configFileEditPost(@PathParam("id") Long adapterId,
+                                     @PathParam("confid") Long confId,
+                                     Context context,
+                                     @JSR303Validation AdapterConfigFileDto configFileDto,
+                                     Validation validation) {
+
+        if (validation.hasViolations()) {
+
+            context.getFlashScope().error("Please correct field.");
+            context.getFlashScope().put("content", configFileDto.configFile);
+
+            return Results.redirect(String.format("/adapter/%d/configfile/%d/edit", adapterId, confId));
+
+        } else {
+
+            adapterConfigFileDao.saveConfigFile(adapterId, confId, configFileDto);
+            context.getFlashScope().success("Config File saved in DB.");
+            return Results.redirect(String.format("/adapter/%d/configfiles", adapterId));
+
+        }
 
     }
 
