@@ -21,6 +21,7 @@ import com.devdaily.system.ConfigFileContent;
 import com.google.inject.Inject;
 import dao.AdapterConfigFileDao;
 import dao.AdapterDao;
+import dao.AdapterTemplateDao;
 import dao.UserAuthDao;
 import etc.LoggedInUser;
 import models.Adapter;
@@ -28,7 +29,10 @@ import models.AdapterConfigFile;
 import models.AdapterConfigFileDto;
 import models.AdapterConfigFilesDto;
 import models.AdapterDto;
+import models.AdapterTemplate;
+import models.AdapterTemplatesDto;
 import models.AdaptersDto;
+import models.TemplatePropertyDto;
 import models.UserAuth;
 import ninja.Context;
 import ninja.FilterWith;
@@ -38,9 +42,18 @@ import ninja.SecureFilter;
 import ninja.params.Param;
 import ninja.params.PathParam;
 import ninja.session.Session;
+import ninja.validation.JSR303Validation;
+import ninja.validation.Validation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import templates.Property;
+import templates.Template;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 public class ApiController {
@@ -57,6 +70,8 @@ public class ApiController {
     @Inject
     AdapterConfigFileDao configFileDao;
 
+    @Inject
+    AdapterTemplateDao adapterTemplateDao;
 
     //@FilterWith(SecureFilter.class)
     public Result getAdaptersJson() {
@@ -318,5 +333,84 @@ public class ApiController {
                     .render(RESULT_FIELD_NAME, "Error")
                     .render("Message", rawConfigFileResult.get("text"));
         }
+    }
+
+    ///
+
+    //@FilterWith(SecureFilter.class)
+    public Result getAdapterTemplatesJson() {
+
+        AdapterTemplatesDto allAdapterTemplates = adapterTemplateDao.getAllAdapterTemplates();
+
+        return Results.json().render(allAdapterTemplates);
+
+    }
+
+    //@FilterWith(SecureFilter.class)
+    public Result getAdapterTemplateJson(@PathParam("id") Long templateId) {
+
+        AdapterTemplate adapterTemplateById = adapterTemplateDao.getAdapterTemplateById(templateId);
+
+        return Results.json().render(adapterTemplateById);
+
+    }
+
+    //@FilterWith(SecureFilter.class)
+    public Result getAdapterTemplatePropertiesJson(@PathParam("id") Long templateId) {
+
+        AdapterTemplate adapterTemplateById = adapterTemplateDao.getAdapterTemplateById(templateId);
+
+        Template template = initTemplate(adapterTemplateById.getTemplateXmlPath());
+        List<Property> properties = template.getProperties().getProperty();
+        System.out.println("***SIZE****: " + properties.size());
+        logger.info(properties.toString());
+
+        return Results.json().render(properties);
+
+    }
+
+    private Template initTemplate(String filePath) {
+        Template template = null;
+
+        logger.info(String.format("Parsing Enrichment Rules xml: %s ", filePath));
+        try {
+
+            //RESTNetworkAdvisorEvents rawEvent = new RESTNetworkAdvisorEvents();
+
+            File file = new File(filePath);
+
+            System.out.println("***XML FILE: " + file.getAbsolutePath());
+
+            JAXBContext jaxbContext = JAXBContext.newInstance(Template.class);
+
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+            template = (Template) jaxbUnmarshaller.unmarshal(file);
+
+        } catch (JAXBException e) {
+            //e.printStackTrace();
+            System.out.println(String.format("Error while invoke Parse config from XML: %s ", e));
+            logger.error(String.format("Error while invoke Parse config from XML: %s ", e));
+        }
+        return template;
+    }
+
+    public Result postAdapterTemplatePropertiesJson(@PathParam("id") Long templateId,
+                                                    @JSR303Validation TemplatePropertyDto templatePropertyDto,
+                                                    Validation validation) {
+
+        if (validation.hasViolations()) {
+
+            return Results.notFound().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("Message", validation.getBeanViolations());
+
+        } else {
+
+            return Results.notFound().json()
+                    .render(RESULT_FIELD_NAME, "Success")
+                    .render("Message", "Хорошо!");
+
+        }
+
     }
 }

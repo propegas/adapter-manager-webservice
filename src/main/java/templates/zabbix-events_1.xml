@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<template name="Zabbix Events">
+    <properties>
+        <property name="adaptersDirectoryFullPath" label="label" format="" defValue="/home/user007/zsm/adapters"/>
+        <property name="adapterDirectory" label="label" format=".*" defValue="camelZabbixMain"/>
+        <property name="adapterFileName" label="label" format=".*" defValue="camelZabbix_main.jar"/>
+        <property name="adapterTitle" label="label" format=".*" defValue="adapterTitle"/>
+        <property name="adapterName" label="label" format="[a-z]*" defValue="ZABBIX_EVENT_ADAPTER_MAIN"/>
+        <property name="adapterDescription" label="label" format=".*" defValue="Описание Описание Описание Описание
+            Описание Описание Описание"/>
+        <property name="adapterShFileName" label="label" format=".*" defValue="ZabbixEventsAdapter_main.sh"/>
+        <property name="mainLogFile" label="label" format=".*" defValue="adapter_main.log"/>
+        <property name="errorLogFile" label="label" format=".*" defValue="errors.log"/>
+        <!-- <status><![CDATA[/^.*$/gs]]></status>-->
+    </properties>
+    <sources>
+        <source name="adapterLibsDir" type="dir" target="${adaptersDirectoryFullPath}/${adapterDirectory}/">
+            templates/libs/camelZabbix/libs
+        </source>
+        <source name="adapterJarFile" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/">
+            templates/jars/camelZabbix.jar
+        </source>
+        <source name="adapterShFile" type="file" target="${adaptersDirectoryFullPath}/">
+            templates/sh/ZabbixEventsAdapter.sh
+        </source>
+        <configs>
+            <config id="1">templates/conf/zabbixapi.properties</config>
+            <config id="2">templates/sh/ZabbixEventsAdapter.sh</config>
+        </configs>
+    </sources>
+    <mainConfigProperties>
+        <mainConfigProperty id="1" name="title" description="" format="">${adapterTitle}</mainConfigProperty>
+        <mainConfigProperty id="2" name="content" description="" format="">${adapterDescription}</mainConfigProperty>
+        <mainConfigProperty id="3" name="jarFileName" description="" format="">${adapterFileName}</mainConfigProperty>
+        <mainConfigProperty id="4" name="jarFilePath" description="" format="">${adaptersDirectoryFullPath}/${adapterDirectory}
+        </mainConfigProperty>
+        <mainConfigProperty id="5" name="checkStatusCommands" description="" format="">
+            <![CDATA[ps -ef | grep -i ${adapterFileName} | grep -v grep]]></mainConfigProperty>
+        <mainConfigProperty id="6" name="startCommands" description="" format="">
+            <![CDATA[${adaptersDirectoryFullPath}/${adapterShFileName} start]]></mainConfigProperty>
+        <mainConfigProperty id="7" name="stopCommands" description="" format="">
+            <![CDATA[${adaptersDirectoryFullPath}/${adapterShFileName} stop]]></mainConfigProperty>
+        <mainConfigProperty id="8" name="logFile" description="" format="">
+            <![CDATA[${adaptersDirectoryFullPath}/${adapterDirectory}/${mainLogFile}]]></mainConfigProperty>
+        <mainConfigProperty id="9" name="errorLogFile" description="" format="">
+            <![CDATA[${adaptersDirectoryFullPath}/${adapterDirectory}/${errorLogFile}]]></mainConfigProperty>
+    </mainConfigProperties>
+    <configFiles>
+        <configFile id="1" configFile="${adaptersDirectoryFullPath}/${adapterDirectory}/zabbixapi.properties"
+                    targetEncoding="ISO-8859-1"
+                    description="bla ">
+            <confProperties>
+                <confProperty id="1" label="label" name="delay" format=".*">5</confProperty>
+                <confProperty id="2" label="label" name="zabbixapiurl" format=".*">
+                    http://172.20.19.195/zabbix/api_jsonrpc.php
+                </confProperty>
+            </confProperties>
+
+        </configFile>
+        <configFile id="2" configFile="${adaptersDirectoryFullPath}/ZabbixEventsAdapter.sh"
+                    targetEncoding="UTF-8"
+                    description="bla">
+            <confProperties>
+                <confProperty id="1" label="label" name="ip" format=".*">172.20.19.195</confProperty>
+                <confProperty id="2" label="label" name="port" format=".*">12345</confProperty>
+            </confProperties>
+
+        </configFile>
+    </configFiles>
+</template>
