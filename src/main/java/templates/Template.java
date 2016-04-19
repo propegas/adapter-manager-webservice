@@ -10,18 +10,19 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for adapterTemplate complex type.
+ * <p>Java class for anonymous complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="adapterTemplate">
+ * &lt;complexType>
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="properties" type="{}properties"/>
- *         &lt;element name="sources" type="{}sources"/>
- *         &lt;element name="configFiles" type="{}configFiles"/>
+ *         &lt;element ref="{}properties"/>
+ *         &lt;element ref="{}sources"/>
+ *         &lt;element ref="{}mainConfigProperties"/>
+ *         &lt;element ref="{}configFiles"/>
  *       &lt;/sequence>
  *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/restriction>
@@ -32,16 +33,13 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "template", propOrder = {
+@XmlType(name = "", propOrder = {
     "properties",
     "sources",
+    "mainConfigProperties",
     "configFiles"
 })
-
-@XmlRootElement(
-        name = "template"
-)
-
+@XmlRootElement(name = "template")
 public class Template {
 
     @XmlElement(required = true)
@@ -49,12 +47,14 @@ public class Template {
     @XmlElement(required = true)
     protected Sources sources;
     @XmlElement(required = true)
+    protected MainConfigProperties mainConfigProperties;
+    @XmlElement(required = true)
     protected ConfigFiles configFiles;
     @XmlAttribute(name = "name")
     protected String name;
 
     /**
-     * Gets the value of the properties property.
+     * <status><![CDATA[/^.*$/gs]]></status>
      * 
      * @return
      *     possible object is
@@ -99,6 +99,30 @@ public class Template {
      */
     public void setSources(Sources value) {
         this.sources = value;
+    }
+
+    /**
+     * Gets the value of the mainConfigProperties property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link MainConfigProperties }
+     *     
+     */
+    public MainConfigProperties getMainConfigProperties() {
+        return mainConfigProperties;
+    }
+
+    /**
+     * Sets the value of the mainConfigProperties property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link MainConfigProperties }
+     *     
+     */
+    public void setMainConfigProperties(MainConfigProperties value) {
+        this.mainConfigProperties = value;
     }
 
     /**

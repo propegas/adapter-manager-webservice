@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="adapterTemplate" type="adapterTemplateType"/>
+  <xs:complexType name="sourcesType">
+    <xs:sequence>
+      <xs:element type="sourceType" name="source" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="configsType" name="configs"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="confPropertyType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="id" use="optional"/>
+        <xs:attribute type="xs:string" name="name" use="optional"/>
+        <xs:attribute type="xs:string" name="format" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="configFilesType">
+    <xs:sequence>
+      <xs:element type="configFileType" name="configFile" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="sourceType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="name" use="optional"/>
+        <xs:attribute type="xs:string" name="type" use="optional"/>
+        <xs:attribute type="xs:string" name="target" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="confPropertiesType">
+    <xs:sequence>
+      <xs:element type="confPropertyType" name="confProperty" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="propertyType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="id" use="optional"/>
+        <xs:attribute type="xs:string" name="name" use="optional"/>
+        <xs:attribute type="xs:string" name="label" use="optional"/>
+        <xs:attribute type="xs:string" name="format" use="optional"/>
+        <xs:attribute type="xs:string" name="defValue" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="propertiesType">
+    <xs:sequence>
+      <xs:element type="propertyType" name="property" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="configType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="id" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="configFileType">
+    <xs:sequence>
+      <xs:element type="confPropertiesType" name="confProperties"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id" use="optional"/>
+    <xs:attribute type="xs:string" name="configFile" use="optional"/>
+    <xs:attribute type="xs:string" name="targetEncoding" use="optional"/>
+    <xs:attribute type="xs:string" name="description" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="configsType">
+    <xs:sequence>
+      <xs:element type="configType" name="config" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="adapterTemplateType">
+    <xs:sequence>
+      <xs:element type="propertiesType" name="properties">
+        <xs:annotation>
+          <xs:documentation>&lt;status>&lt;![CDATA[/^.*$/gs]]&gt;&lt;/status></xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="sourcesType" name="sources"/>
+      <xs:element type="configFilesType" name="configFiles"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name"/>
+  </xs:complexType>
+</xs:schema>

@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import dao.AdapterConfigFileDao;
 import dao.AdapterDao;
 import dao.AdapterTemplateDao;
+import dao.AdapterTemplatePropertyDao;
 import dao.UserAuthDao;
 import etc.LoggedInUser;
 import models.Adapter;
@@ -30,6 +31,7 @@ import models.AdapterConfigFileDto;
 import models.AdapterConfigFilesDto;
 import models.AdapterDto;
 import models.AdapterTemplate;
+import models.AdapterTemplateProperty;
 import models.AdapterTemplatesDto;
 import models.AdaptersDto;
 import models.TemplatePropertyDto;
@@ -51,8 +53,13 @@ import templates.Template;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,6 +67,8 @@ public class ApiController {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiController.class);
     private static final String RESULT_FIELD_NAME = "Result";
+
+    private List<Property> properties;
 
     @Inject
     AdapterDao adapterDao;
@@ -72,6 +81,9 @@ public class ApiController {
 
     @Inject
     AdapterTemplateDao adapterTemplateDao;
+
+    @Inject
+    AdapterTemplatePropertyDao adapterTemplatePropertyDao;
 
     //@FilterWith(SecureFilter.class)
     public Result getAdaptersJson() {
@@ -361,11 +373,10 @@ public class ApiController {
         AdapterTemplate adapterTemplateById = adapterTemplateDao.getAdapterTemplateById(templateId);
 
         Template template = initTemplate(adapterTemplateById.getTemplateXmlPath());
-        List<Property> properties = template.getProperties().getProperty();
-        System.out.println("***SIZE****: " + properties.size());
-        logger.info(properties.toString());
+        List<Property> propertyList = template.getProperties().getProperty();
+        logger.info(propertyList.toString());
 
-        return Results.json().render(properties);
+        return Results.json().render(propertyList);
 
     }
 
@@ -375,21 +386,13 @@ public class ApiController {
         logger.info(String.format("Parsing Enrichment Rules xml: %s ", filePath));
         try {
 
-            //RESTNetworkAdvisorEvents rawEvent = new RESTNetworkAdvisorEvents();
-
             File file = new File(filePath);
-
-            System.out.println("***XML FILE: " + file.getAbsolutePath());
-
             JAXBContext jaxbContext = JAXBContext.newInstance(Template.class);
-
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
             template = (Template) jaxbUnmarshaller.unmarshal(file);
 
         } catch (JAXBException e) {
-            //e.printStackTrace();
-            System.out.println(String.format("Error while invoke Parse config from XML: %s ", e));
-            logger.error(String.format("Error while invoke Parse config from XML: %s ", e));
+            logger.error("Error while invoke Parse config from XML: ", e);
         }
         return template;
     }
@@ -404,13 +407,126 @@ public class ApiController {
                     .render(RESULT_FIELD_NAME, "Error")
                     .render("Message", validation.getBeanViolations());
 
-        } else {
+        }
 
-            return Results.notFound().json()
+        AdapterTemplate adapterTemplateById = adapterTemplateDao.getAdapterTemplateById(templateId);
+        Template template = initTemplate(adapterTemplateById.getTemplateXmlPath());
+
+        properties = template.getProperties().getProperty();
+        HashMap<String, String> propKeys = null;
+
+        // get Properties as HashMap
+        try {
+            propKeys = initPropertiesMapFromList(templatePropertyDto);
+        } catch (IllegalAccessException e) {
+            logger.error("Error while getting access to Property class fields", e);
+        }
+
+        if (propKeys == null) {
+            return Results.badRequest().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("Message", "Ошибка при чтении и формировании XML");
+        }
+        logger.debug(propKeys.toString());
+
+        // check for unique
+        for (Property property : properties) {
+            if (property.isUnique()) {
+                List<AdapterTemplateProperty> a = adapterTemplatePropertyDao
+                        .getProperiesByName(property.getName(), property.getValue());
+                if (!a.isEmpty()) {
+                    return Results.badRequest().json()
+                            .render(RESULT_FIELD_NAME, "Error")
+                            .render("Message", String.format("Поле '%s' должно быть уникальным в системе", property.getLabel()));
+                }
+            }
+        }
+
+        // create XML string from object
+        String xmlString;
+        try {
+            // get String from XML, replace Placeholders
+            xmlString = xmlTemplateToString(template, propKeys);
+
+            // save as new xml file
+            String xmlFileId = Long.toString(System.currentTimeMillis());
+            Template templateSave = saveTemplateToFile(xmlFileId, xmlString);
+
+            // save Properties in DB
+            adapterTemplatePropertyDao.postProperties(xmlFileId, properties);
+
+            return Results.ok().json()
                     .render(RESULT_FIELD_NAME, "Success")
-                    .render("Message", "Хорошо!");
+                    .render("configFiles", templateSave.getConfigFiles().getConfigFile())
+                    .render("file", String.format("templates/%s.xml", xmlFileId))
+                    .render("xmlFileId", String.format("%s", xmlFileId));
 
+
+        } catch (JAXBException e) {
+            String error = "Error while format string from XML and saving template to XML file: ";
+            logger.error(error, e);
+            return Results.badRequest().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("message", error + e);
         }
 
     }
+
+    private Template saveTemplateToFile(String xmlFileId, String xmlString ) throws JAXBException {
+        File newXmlFile = new File(String.format("templates/%s.xml", xmlFileId));
+
+        JAXBContext context = JAXBContext.newInstance(Template.class);
+        Unmarshaller unmarshaller = context.createUnmarshaller();
+        Marshaller m = context.createMarshaller();
+        StringReader reader = new StringReader(xmlString);
+        Template templateSave = (Template) unmarshaller.unmarshal(reader);
+        m.marshal(templateSave, newXmlFile);
+        return templateSave;
+
+    }
+
+    private String xmlTemplateToString(Template template, HashMap<String, String> propKeys) {
+        // create XML string from object
+        String xmlString;
+        try {
+            JAXBContext context = JAXBContext.newInstance(Template.class);
+            Marshaller m = context.createMarshaller();
+
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE); // To format XML
+
+            StringWriter sw = new StringWriter();
+            m.marshal(template, sw);
+            xmlString = sw.toString();
+
+            // replace all ${} placeholders in template with property
+            for (Map.Entry<String, String> entry : propKeys.entrySet()) {
+                xmlString = xmlString.replaceAll(String.format("\\$\\{%s\\}", entry.getKey()),
+                        entry.getValue());
+            }
+
+            return xmlString;
+
+
+        } catch (JAXBException e) {
+            logger.error("Error while format string from XML: ", e);
+            return null;
+        }
+    }
+
+    private HashMap<String, String> initPropertiesMapFromList(TemplatePropertyDto templatePropertyDto) throws IllegalAccessException {
+
+        Field[] fields = TemplatePropertyDto.class.getDeclaredFields();
+        HashMap<String, String> propKeys = new HashMap<>();
+        for (Field field : fields) {
+            //gives the names of the fields
+            for (Property property : properties) {
+                if (property.getName().equals(field.getName())) {
+                    property.setValue((String) field.get(templatePropertyDto));
+                    propKeys.put(property.getName(), property.getValue());
+                }
+            }
+        }
+        return propKeys;
+    }
+
 }

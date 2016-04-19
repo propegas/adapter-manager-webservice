@@ -16,10 +16,12 @@ public class TemplatePropertyDto {
     public String adapterFileName;
 
     @NotNull
+    @Pattern(regexp = "[aA-zZ_0-9-]*", message = "Заголовок адаптера должно быть таким-то [aA-zZ_-]*")
     public String adapterTitle;
 
     @NotNull
-    @Pattern(regexp = "[a-z]*", message = "Имя адаптера должно быть таким-то")
+    @Size(min = 6)
+    @Pattern(regexp = "[aA-zZ_-]*", message = "Имя адаптера должно быть таким-то [aA-zZ_-]*")
     public String adapterName;
 
     @NotNull
@@ -30,6 +32,9 @@ public class TemplatePropertyDto {
 
     @NotNull
     public String errorLogFile;
+
+    @NotNull
+    public String mainLogFile;
 
     public TemplatePropertyDto() {}
 

@@ -4,17 +4,18 @@ package templates;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
 
 /**
- * <p>Java class for property complex type.
+ * <p>Java class for anonymous complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="property">
+ * &lt;complexType>
  *   &lt;simpleContent>
  *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>string">
  *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
@@ -29,9 +30,10 @@ import javax.xml.bind.annotation.XmlValue;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "property", propOrder = {
+@XmlType(name = "", propOrder = {
     "value"
 })
+@XmlRootElement(name = "property")
 public class Property {
 
     @XmlValue
@@ -44,6 +46,8 @@ public class Property {
     protected String format;
     @XmlAttribute(name = "defValue")
     protected String defValue;
+    @XmlAttribute(name = "unique")
+    protected boolean unique;
 
     /**
      * Gets the value of the value property.
@@ -165,8 +169,17 @@ public class Property {
         this.defValue = value;
     }
 
+    @Override
     public String toString() {
-        return String.format("[Propery] %s: %s", this.getName(), this.getDefValue());
+        return String.format("fieldName:%s%nfieldValue:%s%nfieldValue:%s%n",
+                this.getName(), this.getValue(), this.isUnique());
     }
 
+    public boolean isUnique() {
+        return unique;
+    }
+
+    public void setUnique(boolean unique) {
+        this.unique = unique;
+    }
 }

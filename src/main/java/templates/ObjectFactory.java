@@ -1,10 +1,7 @@
 
 package templates;
 
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.XmlElementDecl;
 import javax.xml.bind.annotation.XmlRegistry;
-import javax.xml.namespace.QName;
 
 
 /**
@@ -24,7 +21,6 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
-    private final static QName _AdapterTemplate_QNAME = new QName("", "adapterTemplate");
 
     /**
      * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: templates
@@ -34,11 +30,19 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link Template }
+     * Create an instance of {@link MainConfigProperties }
      * 
      */
-    public Template createAdapterTemplate() {
-        return new Template();
+    public MainConfigProperties createMainConfigProperties() {
+        return new MainConfigProperties();
+    }
+
+    /**
+     * Create an instance of {@link MainConfigProperty }
+     * 
+     */
+    public MainConfigProperty createMainConfigProperty() {
+        return new MainConfigProperty();
     }
 
     /**
@@ -50,46 +54,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link ConfigFile }
-     * 
-     */
-    public ConfigFile createConfigFile() {
-        return new ConfigFile();
-    }
-
-    /**
-     * Create an instance of {@link Source }
-     * 
-     */
-    public Source createSource() {
-        return new Source();
-    }
-
-    /**
-     * Create an instance of {@link ConfProperty }
-     * 
-     */
-    public ConfProperty createConfProperty() {
-        return new ConfProperty();
-    }
-
-    /**
-     * Create an instance of {@link ConfProperties }
-     * 
-     */
-    public ConfProperties createConfProperties() {
-        return new ConfProperties();
-    }
-
-    /**
-     * Create an instance of {@link ConfigFiles }
-     * 
-     */
-    public ConfigFiles createConfigFiles() {
-        return new ConfigFiles();
-    }
-
-    /**
      * Create an instance of {@link Config }
      * 
      */
@@ -98,11 +62,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link Property }
+     * Create an instance of {@link Template }
      * 
      */
-    public Property createProperty() {
-        return new Property();
+    public Template createTemplate() {
+        return new Template();
     }
 
     /**
@@ -114,6 +78,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link Property }
+     * 
+     */
+    public Property createProperty() {
+        return new Property();
+    }
+
+    /**
      * Create an instance of {@link Sources }
      * 
      */
@@ -122,12 +94,43 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link Template }{@code >}}
+     * Create an instance of {@link Source }
      * 
      */
-    @XmlElementDecl(namespace = "", name = "adapterTemplate")
-    public JAXBElement<Template> createAdapterTemplate(Template value) {
-        return new JAXBElement<Template>(_AdapterTemplate_QNAME, Template.class, null, value);
+    public Source createSource() {
+        return new Source();
+    }
+
+    /**
+     * Create an instance of {@link ConfigFiles }
+     * 
+     */
+    public ConfigFiles createConfigFiles() {
+        return new ConfigFiles();
+    }
+
+    /**
+     * Create an instance of {@link ConfigFile }
+     * 
+     */
+    public ConfigFile createConfigFile() {
+        return new ConfigFile();
+    }
+
+    /**
+     * Create an instance of {@link ConfProperties }
+     * 
+     */
+    public ConfProperties createConfProperties() {
+        return new ConfProperties();
+    }
+
+    /**
+     * Create an instance of {@link ConfProperty }
+     * 
+     */
+    public ConfProperty createConfProperty() {
+        return new ConfProperty();
     }
 
 }
