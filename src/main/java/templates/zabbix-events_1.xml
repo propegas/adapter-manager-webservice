@@ -71,7 +71,7 @@
                     description="Файл запуска и остановки процесса адаптера">
             <confProperties>
                 <confProperty id="1" label="IP сервера ActiveMQ" name="activemq_ip" format=".*" globalConfig="true">172.20.19.195</confProperty>
-                <confProperty id="2" label="Порт сервера ActiveMQ" name="activemq_port" format="[0-9]+" globalConfig="true">12345</confProperty>
+                <confProperty id="2" label="Порт сервера ActiveMQ" name="activemq_port" format="[0-9]+" globalConfig="true">${activemq_port}</confProperty>
             </confProperties>
 
         </configFile>

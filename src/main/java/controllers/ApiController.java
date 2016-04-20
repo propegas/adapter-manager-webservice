@@ -23,6 +23,7 @@ import dao.AdapterConfigFileDao;
 import dao.AdapterDao;
 import dao.AdapterTemplateDao;
 import dao.AdapterTemplatePropertyDao;
+import dao.GlobalPropertyDao;
 import dao.UserAuthDao;
 import etc.LoggedInUser;
 import models.Adapter;
@@ -34,6 +35,8 @@ import models.AdapterTemplate;
 import models.AdapterTemplateProperty;
 import models.AdapterTemplatesDto;
 import models.AdaptersDto;
+import models.GlobalProperty;
+import models.TemplateConfigFilePropertiesDto;
 import models.TemplatePropertyDto;
 import models.UserAuth;
 import ninja.Context;
@@ -48,6 +51,8 @@ import ninja.validation.JSR303Validation;
 import ninja.validation.Validation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import templates.ConfProperty;
+import templates.ConfigFile;
 import templates.Property;
 import templates.Template;
 
@@ -84,6 +89,9 @@ public class ApiController {
 
     @Inject
     AdapterTemplatePropertyDao adapterTemplatePropertyDao;
+
+    @Inject
+    GlobalPropertyDao globalPropertyDao;
 
     //@FilterWith(SecureFilter.class)
     public Result getAdaptersJson() {
@@ -383,7 +391,7 @@ public class ApiController {
     private Template initTemplate(String filePath) {
         Template template = null;
 
-        logger.info(String.format("Parsing Enrichment Rules xml: %s ", filePath));
+        logger.info(String.format("Get access to xml: %s ", filePath));
         try {
 
             File file = new File(filePath);
@@ -413,9 +421,9 @@ public class ApiController {
         Template template = initTemplate(adapterTemplateById.getTemplateXmlPath());
 
         properties = template.getProperties().getProperty();
-        HashMap<String, String> propKeys = null;
 
-        // get Properties as HashMap
+        // translate Properties as HashMap
+        HashMap<String, String> propKeys = null;
         try {
             propKeys = initPropertiesMapFromList(templatePropertyDto);
         } catch (IllegalAccessException e) {
@@ -425,15 +433,18 @@ public class ApiController {
         if (propKeys == null) {
             return Results.badRequest().json()
                     .render(RESULT_FIELD_NAME, "Error")
-                    .render("Message", "Ошибка при чтении и формировании XML");
+                    .render("Message", "Ошибка при чтении и формировании параметров шаблона адаптера из XML");
         }
         logger.debug(propKeys.toString());
 
         // check for unique
         for (Property property : properties) {
+            System.out.println("property: " + property);
             if (property.isUnique()) {
+                System.out.println("property name: " + property.getName());
+                System.out.println("property value: " + property.getValue());
                 List<AdapterTemplateProperty> a = adapterTemplatePropertyDao
-                        .getProperiesByName(property.getName(), property.getValue());
+                        .getPropertiesByNameAndValue(property.getName(), property.getValue());
                 if (!a.isEmpty()) {
                     return Results.badRequest().json()
                             .render(RESULT_FIELD_NAME, "Error")
@@ -445,15 +456,26 @@ public class ApiController {
         // create XML string from object
         String xmlString;
         try {
-            // get String from XML, replace Placeholders
+            String xmlFileId = Long.toString(System.currentTimeMillis());
+            Template templateWithProperties;
+            Template templateSave;
+            // replace main Properties Placeholders
             xmlString = xmlTemplateToString(template, propKeys);
+            logger.debug("XML: " + xmlString);
+            // save as new xml file
+            templateWithProperties = saveTemplateToFile(xmlFileId, xmlString);
+
+            // replace Placeholders for GlobalConfigs
+            xmlString = xmlTemplateToStringWithGlobalProperties(templateWithProperties);
+            logger.debug("XML: " + xmlString);
 
             // save as new xml file
-            String xmlFileId = Long.toString(System.currentTimeMillis());
-            Template templateSave = saveTemplateToFile(xmlFileId, xmlString);
+            templateSave = saveTemplateToFile(xmlFileId, xmlString);
 
             // save Properties in DB
             adapterTemplatePropertyDao.postProperties(xmlFileId, properties);
+
+            logger.debug("******: " + templateSave.getConfigFiles().getConfigFile().get(0).getConfProperties().get("delay").getValue());
 
             return Results.ok().json()
                     .render(RESULT_FIELD_NAME, "Success")
@@ -472,17 +494,159 @@ public class ApiController {
 
     }
 
-    private Template saveTemplateToFile(String xmlFileId, String xmlString ) throws JAXBException {
+    private String xmlTemplateToStringWithGlobalProperties(Template template) {
+        String xmlString;
+
+        List<GlobalProperty> globalProperties = globalPropertyDao.getAllProperies();
+
+        try {
+            JAXBContext context = JAXBContext.newInstance(Template.class);
+            Marshaller m = context.createMarshaller();
+
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE); // To format XML
+
+            StringWriter sw = new StringWriter();
+            m.marshal(template, sw);
+            xmlString = sw.toString();
+
+            // replace all ${} placeholders in template with property
+            for (GlobalProperty globalProperty : globalProperties) {
+                xmlString = xmlString.replaceAll(String.format("\\$\\{%s\\}",
+                        globalProperty.getPropertyName()),
+                        globalProperty.getPropertyValue());
+            }
+
+            return xmlString;
+
+
+        } catch (JAXBException e) {
+            logger.error("Error while format string from XML: ", e);
+            return null;
+        }
+    }
+
+    public Result postTemplateConfFilePropertiesJson(@PathParam("id") Long templateId,
+                                                     @PathParam("xmlfileid") String fileId,
+                                                     @PathParam("confid") String confIId,
+                                                     TemplateConfigFilePropertiesDto configFilePropertiesDto) {
+        String fileXml = String.format("templates/%s.xml", fileId);
+        Template template = initTemplate(String.format(fileXml, fileId));
+        List<ConfigFile> configFiles = template.getConfigFiles().getConfigFile();
+
+        // get conffile bu id from xml
+        ConfigFile configFile = getConfigFileFromListById(configFiles, confIId);
+        if (configFile == null) {
+            String error = "Описание конфигурационного файла не найдено в шаблоне XML";
+            logger.error(error, new NullPointerException());
+            return Results.badRequest().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("message", error);
+        }
+
+        logger.debug("*****RESULT: " + configFilePropertiesDto.getConfFileProperties());
+        // check every key from conf properties
+        for (Map.Entry<String, Object> entry : configFilePropertiesDto.getConfFileProperties().entrySet()) {
+            logger.debug(String.format("*** %s: %s",
+                    entry.getKey(),
+                    entry.getValue().toString()));
+
+            // save values to XML
+            ConfProperty confProperty = configFile.getConfProperties().get(entry.getKey());
+            if ("".equals(entry.getValue().toString()) &&
+                    !confProperty.isGlobalConfig()) {
+                return Results.badRequest().json()
+                        .render(RESULT_FIELD_NAME, "Error")
+                        .render("message", String.format("Поле '%s' не может быть пустым для данной конфигурации",
+                                confProperty.getLabel()));
+            }
+
+            String fieldPattern = confProperty.getFormat();
+
+            // check format
+            logger.info(String.format("Try to check field %s with value: %s on format:%s",
+                    confProperty.getName(),
+                    entry.getValue().toString(),
+                    fieldPattern));
+            if (!entry.getValue().toString().matches(fieldPattern))
+                return Results.badRequest().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("message", String.format("Поле '%s' не соответствует формату: %s ",
+                            confProperty.getLabel(),
+                            confProperty.getFormat()));
+
+            // save value to XML
+            confProperty.setValue(entry.getValue().toString());
+        }
+
+        String xmlString = xmlTemplateToString(template);
+        // save xml to file
+        try {
+            saveTemplateToFile(fileId, xmlString);
+        } catch (JAXBException e) {
+            String error = "Ошибка при формировании и сохранении параметров в файл шаблона ";
+            logger.error(error, e);
+            return Results.badRequest().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("message", error);
+        }
+
+        return Results.ok().json()
+                .render(RESULT_FIELD_NAME, "Success")
+                .render("configFile", configFile);
+    }
+
+    private ConfigFile getConfigFileFromListById(List<ConfigFile> configFiles, String confId) {
+        for (ConfigFile configFile : configFiles) {
+            if (confId.equals(configFile.getId()))
+                return configFile;
+        }
+        return null;
+    }
+
+    private Template saveTemplateToFile(String xmlFileId, String xmlString) throws JAXBException {
         File newXmlFile = new File(String.format("templates/%s.xml", xmlFileId));
 
         JAXBContext context = JAXBContext.newInstance(Template.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
         Marshaller m = context.createMarshaller();
+        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
         StringReader reader = new StringReader(xmlString);
         Template templateSave = (Template) unmarshaller.unmarshal(reader);
         m.marshal(templateSave, newXmlFile);
         return templateSave;
 
+    }
+
+    private String xmlTemplateToString(Template template) {
+        // create XML string from object
+        String xmlString;
+        try {
+            JAXBContext context = JAXBContext.newInstance(Template.class);
+            Marshaller m = context.createMarshaller();
+
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE); // To format XML
+            /*
+            m.setProperty( "com.sun.xml.internal.bind.characterEscapeHandler", new CharacterEscapeHandler() {
+                @Override
+                public void escape( char[] ac, int i, int j, boolean flag, Writer writer ) throws IOException
+                {
+                    // do not escape
+                    writer.write( ac, i, j );
+                }
+            });
+            */
+
+            StringWriter sw = new StringWriter();
+            m.marshal(template, sw);
+            xmlString = sw.toString();
+
+            return xmlString;
+
+        } catch (JAXBException e) {
+            logger.error("Error while format string from XML: ", e);
+            return null;
+        }
     }
 
     private String xmlTemplateToString(Template template, HashMap<String, String> propKeys) {

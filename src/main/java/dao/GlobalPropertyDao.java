@@ -18,49 +18,46 @@ package dao;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
-import models.AdapterTemplateProperty;
+import models.GlobalProperty;
 import ninja.jpa.UnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import templates.Property;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 import java.util.List;
 
-public class AdapterTemplatePropertyDao {
+public class GlobalPropertyDao {
 
     static final String CONFIG_FILE_IDS_NOT_FOUND = "Adapter ID or ConfigFile ID not found in DB";
-    static final Logger logger = LoggerFactory.getLogger(AdapterTemplatePropertyDao.class);
+    static final Logger logger = LoggerFactory.getLogger(GlobalPropertyDao.class);
 
     @Inject
     Provider<EntityManager> entityManagerProvider;
 
     @UnitOfWork
-    public List<AdapterTemplateProperty> getAllProperies() {
+    public List<GlobalProperty> getAllProperies() {
 
         EntityManager entityManager = entityManagerProvider.get();
 
-        TypedQuery<AdapterTemplateProperty> query = entityManager
-                .createQuery("SELECT x FROM TemplateProperty x",
-                        AdapterTemplateProperty.class);
+        TypedQuery<GlobalProperty> query = entityManager
+                .createQuery("SELECT x FROM GlobalConfig x",
+                        GlobalProperty.class);
 
         return query.setFirstResult(0).getResultList();
 
     }
 
     @UnitOfWork
-    public List<AdapterTemplateProperty> getPropertiesByNameAndValue(String propertyName, String propertyValue) {
+    public List<GlobalProperty> getProperiesByNameAndValue(String propertyName, String propertyValue) {
 
         EntityManager entityManager = entityManagerProvider.get();
 
-        TypedQuery<AdapterTemplateProperty> query = entityManager
-                .createQuery("SELECT x FROM TemplateProperty x " +
+        TypedQuery<GlobalProperty> query = entityManager
+                .createQuery("SELECT x FROM GlobalConfig x " +
                         "where x.propertyName = :propertyNameParam " +
                         "and x.propertyValue = :propertyValueParam",
-                        AdapterTemplateProperty.class);
+                        GlobalProperty.class);
 
         return query
                 .setParameter("propertyNameParam", propertyName)
@@ -69,21 +66,20 @@ public class AdapterTemplatePropertyDao {
 
     }
 
-    @Transactional
-    public boolean postProperties(String xmlFileId, List<Property> properties) {
+    @UnitOfWork
+    public List<GlobalProperty> getProperiesByName(String propertyName) {
+
         EntityManager entityManager = entityManagerProvider.get();
 
-        if (properties.isEmpty()) {
-            String errorMessage = "Properties List is empty";
-            logger.error(errorMessage, new NoResultException());
-            return false;
-        }
+        TypedQuery<GlobalProperty> query = entityManager
+                .createQuery("SELECT x FROM GlobalConfig x " +
+                                "where x.propertyName = :propertyNameParam ",
+                        GlobalProperty.class);
 
-        for (Property property : properties) {
-            AdapterTemplateProperty templateProperty = new AdapterTemplateProperty(property.getName(), property.getValue(), xmlFileId);
-            entityManager.persist(templateProperty);
-        }
+        return query
+                .setParameter("propertyNameParam", propertyName)
+                .getResultList();
 
-        return true;
     }
+
 }

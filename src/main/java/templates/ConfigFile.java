@@ -4,9 +4,11 @@ package templates;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -39,8 +41,11 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "configFile")
 public class ConfigFile {
 
-    @XmlElement(required = true)
-    protected ConfProperties confProperties;
+    //@XmlElement(required = true)
+    //protected ConfProperties confProperties;
+
+    @XmlJavaTypeAdapter(MapAdapter.class)
+    private Map<String, ConfProperty> confProperties = new HashMap<>();
     @XmlAttribute(name = "id")
     protected String id;
     @XmlAttribute(name = "configFile")
@@ -50,38 +55,6 @@ public class ConfigFile {
     @XmlAttribute(name = "description")
     protected String description;
 
-    /**
-     * Gets the value of the confProperties property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link ConfProperties }
-     *     
-     */
-    public ConfProperties getConfProperties() {
-        return confProperties;
-    }
-
-    /**
-     * Sets the value of the confProperties property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link ConfProperties }
-     *     
-     */
-    public void setConfProperties(ConfProperties value) {
-        this.confProperties = value;
-    }
-
-    /**
-     * Gets the value of the id property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
     public String getId() {
         return id;
     }
@@ -170,4 +143,12 @@ public class ConfigFile {
         this.description = value;
     }
 
+
+    public Map<String, ConfProperty> getConfProperties() {
+        return confProperties;
+    }
+
+    public void setConfProperties(Map<String, ConfProperty> confProperties) {
+        this.confProperties = confProperties;
+    }
 }

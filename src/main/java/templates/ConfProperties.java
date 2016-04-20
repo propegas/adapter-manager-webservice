@@ -5,8 +5,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import java.util.ArrayList;
-import java.util.List;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -35,7 +36,18 @@ import java.util.List;
 @XmlRootElement(name = "confProperties")
 public class ConfProperties {
 
-    protected List<ConfProperty> confProperty;
+    //private String name;
+
+    @XmlJavaTypeAdapter(MapAdapter.class)
+    private Map<String, ConfProperty> confProperty = new HashMap<>();
+
+    public Map<String, ConfProperty> getConfProperty() {
+        return confProperty;
+    }
+
+    public void setConfProperty(Map<String, ConfProperty> confProperty) {
+        this.confProperty = confProperty;
+    }
 
     /**
      * Gets the value of the confProperty property.
@@ -59,11 +71,9 @@ public class ConfProperties {
      * 
      * 
      */
-    public List<ConfProperty> getConfProperty() {
-        if (confProperty == null) {
-            confProperty = new ArrayList<ConfProperty>();
-        }
-        return this.confProperty;
-    }
+
+
+
+
 
 }
