@@ -85,7 +85,7 @@ public class AdapterController {
 
         } else {
 
-            adapterDao.postAdapter(username, adapterDto);
+            adapterDao.postAdapter(adapterDto);
 
             context.getFlashScope().success("New adapter created.");
 

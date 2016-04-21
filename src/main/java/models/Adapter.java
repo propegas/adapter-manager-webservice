@@ -1,16 +1,11 @@
 package models;
 
-import com.google.common.collect.Lists;
-
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.util.Date;
-import java.util.List;
 
 @Entity
 public class Adapter {
@@ -28,9 +23,10 @@ public class Adapter {
     @Column(length = 5000) //init with VARCHAR(1000)
     public String content;
 
+    /*
     @ElementCollection(fetch=FetchType.EAGER)
     public List<Long> authorIds;
-
+*/
     private String jarFilePath;
     private String checkStatusCommands;
     private String startCommands;
@@ -43,8 +39,7 @@ public class Adapter {
         this.logFile = "";
     }
     
-    public Adapter(UserAuth author, String title, String content, String jarFileName) {
-        this.authorIds = Lists.newArrayList(author.id);
+    public Adapter(String title, String content, String jarFileName) {
         this.title = title;
         this.content = content;
         this.jarFileName = jarFileName;
@@ -57,8 +52,7 @@ public class Adapter {
         this.errorLogFile = "";
     }
 
-    public Adapter(UserAuth author, String title, String content) {
-        this.authorIds = Lists.newArrayList(author.id);
+    public Adapter(String title, String content) {
         this.title = title;
         this.content = content;
         this.jarFileName = "";

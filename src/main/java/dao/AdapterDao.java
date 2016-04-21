@@ -96,18 +96,11 @@ public class AdapterDao {
      * Returns false if user cannot be found in database.
      */
     @Transactional
-    public boolean postAdapter(String username, AdapterDto adapterDto) {
+    public Adapter postAdapter(AdapterDto adapterDto) {
 
         EntityManager entityManager = entityManagerProvider.get();
 
-        Query query = entityManager.createQuery("SELECT x FROM UserAuth x WHERE x.username = :usernameParam");
-        UserAuth userAuth = (UserAuth) query.setParameter("usernameParam", username).getSingleResult();
-
-        if (userAuth == null) {
-            return false;
-        }
-
-        Adapter adapter = new Adapter(userAuth, adapterDto.title, adapterDto.content, adapterDto.jarFileName);
+        Adapter adapter = new Adapter(adapterDto.title, adapterDto.content, adapterDto.jarFileName);
         adapter.setStatus("Unknown");
         adapter.setJarFilePath(adapterDto.jarFilePath);
         adapter.setCheckStatusCommands(adapterDto.checkStatusCommands);
@@ -117,8 +110,10 @@ public class AdapterDao {
         adapter.setErrorLogFile(adapterDto.errorLogFile);
 
         entityManager.persist(adapter);
+        entityManager.flush();
+        //entityManager.getProperties().get()
 
-        return true;
+        return adapter;
 
     }
 

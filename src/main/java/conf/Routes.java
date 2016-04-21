@@ -131,6 +131,8 @@ public class Routes implements ApplicationRoutes {
         router.POST().route("/api/template/{id}/properties.json").with(ApiController.class, "postAdapterTemplatePropertiesJson");
         router.POST().route("/api/template/{id}/xmlfileid/{xmlfileid}/configfile/{confid}/properties.json")
                 .with(ApiController.class, "postTemplateConfFilePropertiesJson");
+        router.POST().route("/api/template/{id}/xmlfileid/{xmlfileid}/createadapter")
+                .with(ApiController.class, "postCreateAdapterFromXmlTemplateJson");
 
         ///////////////////////////////////////////////////////////////////////
         // Show adapter config files

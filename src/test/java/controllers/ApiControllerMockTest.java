@@ -18,6 +18,8 @@ package controllers;
 
 import dao.AdapterConfigFileDao;
 import dao.AdapterDao;
+import models.Adapter;
+import models.AdapterConfigFile;
 import ninja.Result;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -51,7 +54,9 @@ public class ApiControllerMockTest {
     @Test
     public void testThatPostAdapterReturnsOkWhenAdapterDaoReturnsTrue() {
 
-        when(adapterDao.postAdapter(null, null)).thenReturn(true);
+        Adapter adapter = mock(Adapter.class);
+        adapter.id = 123L;
+        when(adapterDao.postAdapter(null)).thenReturn(adapter);
         
         Result result = apiController.postAdapterJson(null, null);
         
@@ -62,7 +67,8 @@ public class ApiControllerMockTest {
     @Test
     public void testThatPostAdapterReturnsNotFoundWhenAdapterDaoReturnsFalse() {
 
-        when(adapterDao.postAdapter(null, null)).thenReturn(false);
+        Adapter adapter = mock(Adapter.class);
+        when(adapterDao.postAdapter(null)).thenReturn(adapter);
 
         Result result = apiController.postAdapterJson(null, null);
         
@@ -72,8 +78,10 @@ public class ApiControllerMockTest {
 
     @Test
     public void testThatPostConfigFileReturnsOkWhenConfigFileDaoReturnsTrue() {
+        AdapterConfigFile adapterConfigFile = mock(AdapterConfigFile.class);
+        adapterConfigFile.setId(123L);
 
-        when(configFileDao.postConfigFile(null, null)).thenReturn(true);
+        when(configFileDao.postConfigFile(null, null)).thenReturn(adapterConfigFile);
 
         Result result = apiController.postConfigFileJson(null, null);
 
@@ -83,8 +91,8 @@ public class ApiControllerMockTest {
 
     @Test
     public void testThatPostConfigFileReturnsNotFoundWhenConfigFileDaoReturnsFalse() {
-
-        when(configFileDao.postConfigFile(null, null)).thenReturn(false);
+        AdapterConfigFile adapterConfigFile = mock(AdapterConfigFile.class);
+        when(configFileDao.postConfigFile(null, null)).thenReturn(adapterConfigFile);
 
         Result result = apiController.postConfigFileJson(null, null);
 

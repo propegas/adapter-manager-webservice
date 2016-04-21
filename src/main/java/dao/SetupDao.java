@@ -33,7 +33,7 @@ public class SetupDao {
             entityManager.persist(bob);
             
             // Create a new adapter
-            Adapter bobPost3 = new Adapter(bob, "Zabbix Events Adapter",
+            Adapter bobPost3 = new Adapter("Zabbix Events Adapter",
                     "Адаптер для сбора событий Zabbix.",
                     "camelZabbix.jar");
             bobPost3.setCheckStatusCommands("ps -ef | grep -i camelZabbix.jar | grep -v grep");

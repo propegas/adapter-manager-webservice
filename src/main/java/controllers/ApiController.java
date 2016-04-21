@@ -53,6 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import templates.ConfProperty;
 import templates.ConfigFile;
+import templates.MainConfigProperty;
 import templates.Property;
 import templates.Template;
 
@@ -64,6 +65,7 @@ import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,9 +161,9 @@ public class ApiController {
     public Result postAdapterJson(@LoggedInUser String username,
                                   AdapterDto adapterDto) {
 
-        boolean succeeded = adapterDao.postAdapter(username, adapterDto);
-
-        if (!succeeded) {
+        Adapter createdAdapter = adapterDao.postAdapter(adapterDto);
+        logger.debug(String.format("****Receive created adapter: %s,%nid: %d", createdAdapter, createdAdapter.id));
+        if (createdAdapter.id == null) {
             return Results.notFound().render(RESULT_FIELD_NAME, "Error");
         } else {
             return Results.json().render(RESULT_FIELD_NAME, "Success");
@@ -173,9 +175,9 @@ public class ApiController {
     public Result postAdapterXml(@LoggedInUser String username,
                                  AdapterDto adapterDto) {
 
-        boolean succeeded = adapterDao.postAdapter(username, adapterDto);
+        Adapter createdAdapter = adapterDao.postAdapter(adapterDto);
 
-        if (!succeeded) {
+        if (createdAdapter.id == null) {
             return Results.notFound();
         } else {
             return Results.xml();
@@ -295,9 +297,11 @@ public class ApiController {
         logger.debug("[TEST] configFileDto: " + configFileDto);
         logger.debug("[TEST] adapterId: " + adapterId);
 
-        boolean succeeded = configFileDao.postConfigFile(adapterId, configFileDto);
+        AdapterConfigFile createdConfigFile = configFileDao.postConfigFile(adapterId, configFileDto);
+        logger.debug(String.format("****Receive created config file: %s,%nid: %d",
+                createdConfigFile, createdConfigFile.getAdapterId()));
 
-        if (!succeeded) {
+        if (createdConfigFile.getId() == null) {
             return Results.notFound().render(RESULT_FIELD_NAME, "Error");
         } else {
             return Results.json().render(RESULT_FIELD_NAME, "Success");
@@ -569,10 +573,10 @@ public class ApiController {
                     fieldPattern));
             if (!entry.getValue().toString().matches(fieldPattern))
                 return Results.badRequest().json()
-                    .render(RESULT_FIELD_NAME, "Error")
-                    .render("message", String.format("Поле '%s' не соответствует формату: %s ",
-                            confProperty.getLabel(),
-                            confProperty.getFormat()));
+                        .render(RESULT_FIELD_NAME, "Error")
+                        .render("message", String.format("Поле '%s' не соответствует формату: %s ",
+                                confProperty.getLabel(),
+                                confProperty.getFormat()));
 
             // save value to XML
             confProperty.setValue(entry.getValue().toString());
@@ -593,6 +597,73 @@ public class ApiController {
         return Results.ok().json()
                 .render(RESULT_FIELD_NAME, "Success")
                 .render("configFile", configFile);
+    }
+
+    public Result postCreateAdapterFromXmlTemplateJson(@PathParam("id") Long templateId,
+                                                       @PathParam("xmlfileid") String fileId) {
+
+
+        String fileXml = String.format("templates/%s.xml", fileId);
+        Template template = initTemplate(String.format(fileXml, fileId));
+
+        String resultMessage = "";
+        Adapter createdAdapter = createAdapterFromXml(template);
+
+        if (createdAdapter == null) {
+            return Results.badRequest().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("Message", "Ошибка при чтении XML и создания адаптера");
+        }
+        resultMessage += "Адаптер создан";
+
+        List<ConfigFile> configFileList = template.getConfigFiles().getConfigFile();
+        List<AdapterConfigFile> createdAdapterConfigFiles = new ArrayList<>();
+        for (ConfigFile configFile : configFileList) {
+            AdapterConfigFileDto configFileDto = new AdapterConfigFileDto();
+            configFileDto.setConfigDescription(configFile.getDescription());
+            configFileDto.configFile = configFile.getConfigFile();
+            AdapterConfigFile createdConfFile = configFileDao.postConfigFile(createdAdapter.id, configFileDto);
+            if (createdConfFile == null) {
+                return Results.badRequest().json()
+                        .render(RESULT_FIELD_NAME, "Error")
+                        .render("Message", "Ошибка при создании конфигурационного файла адаптера: " + configFile.getConfigFile());
+            }
+            createdAdapterConfigFiles.add(createdConfFile);
+        }
+        resultMessage += "Конфигурационные файлы созданы";
+
+        return Results.ok().json()
+                .render("Adapter", createdAdapter)
+                .render("ConfigFiles", createdAdapterConfigFiles)
+                .render("Operations", resultMessage)
+                .render(RESULT_FIELD_NAME, "Success");
+    }
+
+    private Adapter createAdapterFromXml(Template template) {
+        List<MainConfigProperty> propertyList = template.getMainConfigProperties().getMainConfigProperty();
+        HashMap<String, MainConfigProperty> propKeys = null;
+        try {
+            propKeys = convertPropertiesMapFromList(propertyList);
+        } catch (IllegalAccessException e) {
+            logger.error("Ошибка доступа к полям объекта: ", e);
+        }
+        if (propKeys == null) {
+            return null;
+        }
+        AdapterDto adapterDto = new AdapterDto();
+        logger.debug("******propKeys: " + propKeys);
+        adapterDto.title = propKeys.get("title").getValue().trim();
+        adapterDto.content = propKeys.get("content").getValue().trim();
+        adapterDto.jarFileName = propKeys.get("jarFileName").getValue().trim();
+        adapterDto.jarFilePath = propKeys.get("jarFilePath").getValue().trim();
+        adapterDto.checkStatusCommands = propKeys.get("checkStatusCommands").getValue().trim();
+        adapterDto.startCommands = propKeys.get("startCommands").getValue().trim();
+        adapterDto.stopCommands = propKeys.get("stopCommands").getValue().trim();
+        adapterDto.logFile = propKeys.get("logFile").getValue().trim();
+        adapterDto.errorLogFile = propKeys.get("errorLogFile").getValue().trim();
+        // adapterDto.status = propKeys.get("content").getValue();
+
+        return adapterDao.postAdapter(adapterDto);
     }
 
     private ConfigFile getConfigFileFromListById(List<ConfigFile> configFiles, String confId) {
@@ -626,16 +697,6 @@ public class ApiController {
             Marshaller m = context.createMarshaller();
 
             m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE); // To format XML
-            /*
-            m.setProperty( "com.sun.xml.internal.bind.characterEscapeHandler", new CharacterEscapeHandler() {
-                @Override
-                public void escape( char[] ac, int i, int j, boolean flag, Writer writer ) throws IOException
-                {
-                    // do not escape
-                    writer.write( ac, i, j );
-                }
-            });
-            */
 
             StringWriter sw = new StringWriter();
             m.marshal(template, sw);
@@ -677,7 +738,8 @@ public class ApiController {
         }
     }
 
-    private HashMap<String, String> initPropertiesMapFromList(TemplatePropertyDto templatePropertyDto) throws IllegalAccessException {
+    private HashMap<String, String> initPropertiesMapFromList(TemplatePropertyDto templatePropertyDto)
+            throws IllegalAccessException {
 
         Field[] fields = TemplatePropertyDto.class.getDeclaredFields();
         HashMap<String, String> propKeys = new HashMap<>();
@@ -689,6 +751,20 @@ public class ApiController {
                     propKeys.put(property.getName(), property.getValue());
                 }
             }
+        }
+        return propKeys;
+    }
+
+    private HashMap<String, MainConfigProperty> convertPropertiesMapFromList(List<MainConfigProperty> propertyList)
+            throws IllegalAccessException {
+
+        //Field[] fields = TemplatePropertyDto.class.getDeclaredFields();
+        HashMap<String, MainConfigProperty> propKeys = new HashMap<>();
+
+        //gives the names of the fields
+        for (MainConfigProperty property : propertyList) {
+            propKeys.put(property.getName(), property);
+
         }
         return propKeys;
     }

@@ -89,7 +89,7 @@ public class AdapterConfigFileDao {
     }
 
     @Transactional
-    public boolean postConfigFile(Long adapterId, AdapterConfigFileDto configFileDto) {
+    public AdapterConfigFile postConfigFile(Long adapterId, AdapterConfigFileDto configFileDto) {
         EntityManager entityManager = entityManagerProvider.get();
 
         Query query = entityManager.createQuery("SELECT x FROM Adapter x WHERE x.id = :adapIdParam");
@@ -98,15 +98,16 @@ public class AdapterConfigFileDao {
         if (adapter == null) {
             String errorMessage = "Adapter ID or ConfigFile ID not found in DB";
             logger.error(errorMessage, new NoResultException());
-            return false;
+            return null;
         }
 
         AdapterConfigFile configFile = new AdapterConfigFile(adapterId, configFileDto.configFile);
         configFile.setConfigDescription(configFileDto.getConfigDescription());
 
         entityManager.persist(configFile);
+        entityManager.flush();
 
-        return true;
+        return configFile;
 
     }
 
