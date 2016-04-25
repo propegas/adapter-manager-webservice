@@ -299,7 +299,7 @@ public class ApiController {
 
         AdapterConfigFile createdConfigFile = configFileDao.postConfigFile(adapterId, configFileDto);
         logger.debug(String.format("****Receive created config file: %s,%nid: %d",
-                createdConfigFile, createdConfigFile.getAdapterId()));
+                createdConfigFile, createdConfigFile.getId()));
 
         if (createdConfigFile.getId() == null) {
             return Results.notFound().render(RESULT_FIELD_NAME, "Error");
@@ -415,7 +415,7 @@ public class ApiController {
 
         if (validation.hasViolations()) {
 
-            return Results.notFound().json()
+            return Results.badRequest().json()
                     .render(RESULT_FIELD_NAME, "Error")
                     .render("Message", validation.getBeanViolations());
 
@@ -442,22 +442,21 @@ public class ApiController {
         logger.debug(propKeys.toString());
 
         // check for unique
-        for (Property property : properties) {
-            System.out.println("property: " + property);
-            if (property.isUnique()) {
-                System.out.println("property name: " + property.getName());
-                System.out.println("property value: " + property.getValue());
-                List<AdapterTemplateProperty> a = adapterTemplatePropertyDao
-                        .getPropertiesByNameAndValue(property.getName(), property.getValue());
-                if (!a.isEmpty()) {
-                    return Results.badRequest().json()
-                            .render(RESULT_FIELD_NAME, "Error")
-                            .render("Message", String.format("Поле '%s' должно быть уникальным в системе", property.getLabel()));
-                }
-            }
-        }
+        Result checkResult = checkPropertiesOnUniq();
+        if (checkResult != null)
+            return checkResult;
 
-        // create XML string from object
+        // check directories
+        Result checkDirsResult = checkDirsResult(propKeys);
+        if (checkDirsResult != null)
+            return checkDirsResult;
+
+        // create XML string from object and save as a file
+        return saveObjectsToXml(template, propKeys);
+
+    }
+
+    private Result saveObjectsToXml(Template template, HashMap<String, String> propKeys) {
         String xmlString;
         try {
             String xmlFileId = Long.toString(System.currentTimeMillis());
@@ -477,7 +476,7 @@ public class ApiController {
             templateSave = saveTemplateToFile(xmlFileId, xmlString);
 
             // save Properties in DB
-            adapterTemplatePropertyDao.postProperties(xmlFileId, properties);
+            //adapterTemplatePropertyDao.postProperties(xmlFileId, properties);
 
             logger.debug("******: " + templateSave.getConfigFiles().getConfigFile().get(0).getConfProperties().get("delay").getValue());
 
@@ -495,7 +494,44 @@ public class ApiController {
                     .render(RESULT_FIELD_NAME, "Error")
                     .render("message", error + e);
         }
+    }
 
+    private Result checkPropertiesOnUniq() {
+        for (Property property : properties) {
+            System.out.println("property: " + property);
+            if (property.isUnique()) {
+                System.out.println("property name: " + property.getName());
+                System.out.println("property value: " + property.getValue());
+                List<AdapterTemplateProperty> a = adapterTemplatePropertyDao
+                        .getPropertiesByNameAndValue(property.getName(), property.getValue());
+                if (!a.isEmpty()) {
+                    return Results.badRequest().json()
+                            .render(RESULT_FIELD_NAME, "Error")
+                            .render("Message", String.format("Поле '%s' должно быть уникальным в системе", property.getLabel()));
+                }
+            }
+        }
+        return null;
+    }
+
+    private Result checkDirsResult(HashMap<String, String> propKeys) {
+        File adaptersDirectoryFullPath =  new File(propKeys.get("adaptersDirectoryFullPath"));
+        File adapterDirectory =  new File(String.format("%s/%s",
+                propKeys.get("adaptersDirectoryFullPath"),
+                propKeys.get("adapterDirectory")));
+        if (!adaptersDirectoryFullPath.exists()) {
+            return Results.badRequest().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("Message", String.format("Директория '%s' не найдена",
+                            adaptersDirectoryFullPath.toString()));
+        }
+        if (adapterDirectory.exists()) {
+            return Results.badRequest().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("Message", String.format("Директория '%s' уже существует",
+                            adapterDirectory.toString()));
+        }
+        return null;
     }
 
     private String xmlTemplateToStringWithGlobalProperties(Template template) {
@@ -614,7 +650,7 @@ public class ApiController {
                     .render(RESULT_FIELD_NAME, "Error")
                     .render("Message", "Ошибка при чтении XML и создания адаптера");
         }
-        resultMessage += "Адаптер создан";
+        resultMessage += "Адаптер создан. ";
 
         List<ConfigFile> configFileList = template.getConfigFiles().getConfigFile();
         List<AdapterConfigFile> createdAdapterConfigFiles = new ArrayList<>();
@@ -630,7 +666,16 @@ public class ApiController {
             }
             createdAdapterConfigFiles.add(createdConfFile);
         }
-        resultMessage += "Конфигурационные файлы созданы";
+        resultMessage += "Конфигурационные файлы созданы. ";
+
+        Map initAdapterFilesResult = AdapterManager.initAdapterFiles(createdAdapter.id, template);
+        if ((boolean) initAdapterFilesResult.get("result")) {
+            resultMessage += "";
+        } else {
+            return Results.notFound().json()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("Message", initAdapterFilesResult.get("text"));
+        }
 
         return Results.ok().json()
                 .render("Adapter", createdAdapter)

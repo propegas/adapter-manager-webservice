@@ -2,9 +2,12 @@ package com.devdaily.system;
 
 import models.Adapter;
 import models.AdapterConfigFile;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import templates.Source;
+import templates.Template;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -323,7 +326,7 @@ public class AdapterManager {
             if (fileSystem != null) {
                 try {
                     fileSystem.close();
-                } catch (IOException|UnsupportedOperationException e) {
+                } catch (IOException | UnsupportedOperationException e) {
                     logger.error("Error while close FileSystem: " + e, e);
                 }
             }
@@ -341,4 +344,66 @@ public class AdapterManager {
 
     }
 
+    public static Map initAdapterFiles(Long adapterId, Template template) {
+
+        List<Source> sourceList = template.getSources().getSource();
+        HashMap<String, Object> map = new HashMap<>();
+        //List<AdapterConfigFile> createdAdapterConfigFiles = new ArrayList<>();
+        String errorText;
+        String successText = "";
+        for (Source source : sourceList) {
+            String sourcePath = source.getValue().trim();
+            String sourceType = source.getType().trim();
+            String sourceTarget = source.getTarget().trim();
+
+            logger.debug(String.format("Try to copy adapter's files..."));
+
+            File sourceFile = new File(sourcePath);
+            File destFile = new File(sourceTarget);
+            if ("dir".equals(sourceType)) {
+                // move files
+
+                logger.debug(String.format("Копируем директорию %s в директорию %s ...",
+                        sourceFile, destFile));
+                if (destFile.exists()){
+                    errorText = String.format("Директория %s уже существует",
+                            destFile);
+                    logger.error(String.format("Директория %s уже существует",
+                             destFile));
+                    map.put("text", errorText);
+                    map.put("result", false);
+                    return map;
+                }
+                try {
+                    FileUtils.copyDirectory(sourceFile, destFile);
+                } catch (IOException e) {
+                    errorText = String.format("Ошибка при копировании директории %s в %s ",
+                            sourceFile, destFile);
+                    logger.error(errorText, e);
+                    map.put("text", errorText + e);
+                    map.put("result", false);
+                    return map;
+                }
+            } else if ("file".equals(sourceType)) {
+
+                logger.debug(String.format("Копируем файл %s в файл %s ...",
+                        sourceFile, destFile));
+                try {
+                    FileUtils.copyFile(sourceFile, destFile);
+                } catch (IOException e) {
+                    errorText = String.format("Ошибка при копировании файла %s в %s ",
+                            sourceFile, destFile);
+                    logger.error(errorText, e);
+                    map.put("text", errorText + e);
+                    map.put("result", false);
+                    return map;
+                }
+            }
+        }
+        successText += "Директория и файлы адаптера добавлены.";
+        map.put("text", successText);
+        map.put("result", true);
+        return map;
+
+    }
 }

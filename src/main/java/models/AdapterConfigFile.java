@@ -20,6 +20,7 @@ public class AdapterConfigFile {
 
     public AdapterConfigFile() {
 // default constructor
+        this.id = null;
     }
 
     public AdapterConfigFile(Long adapterId, String configFile) {

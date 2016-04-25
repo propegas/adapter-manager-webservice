@@ -125,13 +125,13 @@ public class Routes implements ApplicationRoutes {
         router.GET().route("/api/adapter/{id}/configfile/{confid}/getrawcontent.json").with(ApiController.class, "getConfigFileRawContentJson");
         router.POST().route("/api/adapter/{id}/configfile/{confid}/postrawcontent.json").with(ApiController.class, "postConfigFileRawContentJson");
         // adapter templates
-        router.GET().route("/api/templates.json").with(ApiController.class, "getAdapterTemplatesJson");
-        router.GET().route("/api/template/{id}.json").with(ApiController.class, "getAdapterTemplateJson");
-        router.GET().route("/api/template/{id}/properties.json").with(ApiController.class, "getAdapterTemplatePropertiesJson");
-        router.POST().route("/api/template/{id}/properties.json").with(ApiController.class, "postAdapterTemplatePropertiesJson");
-        router.POST().route("/api/template/{id}/xmlfileid/{xmlfileid}/configfile/{confid}/properties.json")
+        router.GET().route("/adapter-api/templates").with(ApiController.class, "getAdapterTemplatesJson");
+        router.GET().route("/adapter-api/template/{id}").with(ApiController.class, "getAdapterTemplateJson");
+        router.GET().route("/adapter-api/template/{id}/properties").with(ApiController.class, "getAdapterTemplatePropertiesJson");
+        router.POST().route("/adapter-api/template/{id}/properties").with(ApiController.class, "postAdapterTemplatePropertiesJson");
+        router.POST().route("/adapter-api/template/{id}/xmlfileid/{xmlfileid}/configfile/{confid}/properties")
                 .with(ApiController.class, "postTemplateConfFilePropertiesJson");
-        router.POST().route("/api/template/{id}/xmlfileid/{xmlfileid}/createadapter")
+        router.POST().route("/adapter-api/template/{id}/xmlfileid/{xmlfileid}/createadapter")
                 .with(ApiController.class, "postCreateAdapterFromXmlTemplateJson");
 
         ///////////////////////////////////////////////////////////////////////
