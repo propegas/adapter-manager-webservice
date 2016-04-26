@@ -344,7 +344,7 @@ public class AdapterManager {
 
     }
 
-    public static Map initAdapterFiles(Long adapterId, Template template) {
+    public static Map initAdapterFiles(Template template) {
 
         List<Source> sourceList = template.getSources().getSource();
         HashMap<String, Object> map = new HashMap<>();
@@ -377,6 +377,11 @@ public class AdapterManager {
                 try {
                     FileUtils.copyDirectory(sourceFile, destFile);
                 } catch (IOException e) {
+                    try {
+                        FileUtils.deleteDirectory(destFile);
+                    } catch (IOException e1) {
+                        logger.error("Ошибка при удалении диретории после сбоая установки ", e);
+                    }
                     errorText = String.format("Ошибка при копировании директории %s в %s ",
                             sourceFile, destFile);
                     logger.error(errorText, e);

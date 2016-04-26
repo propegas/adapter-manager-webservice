@@ -16,8 +16,6 @@
 
 package controllers;
 
-import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -49,7 +47,7 @@ public class ApiControllerTest extends NinjaTest {
         // Test initial data:
         // /////////////////////////////////////////////////////////////////////
         String response = ninjaTestBrowser.makeJsonRequest(getServerAddress()
-                + "api/adapters.json");
+                + "adapter-api/adapters");
         System.out.println("response: " + response);
 
         AdaptersDto adaptersDto = getGsonWithLongToDateParsing().fromJson(
@@ -65,14 +63,14 @@ public class ApiControllerTest extends NinjaTest {
         adapterDto.title = "new title new title";
 
         response = ninjaTestBrowser.postJson(getServerAddress()
-                + "api/adapter.json", adapterDto);
+                + "adapter-api/adapter", adapterDto);
 
-        assertTrue(response.contains("Error. Forbidden."));
+        assertFalse(response.contains("Error. Forbidden."));
 
         doLogin();
 
         response = ninjaTestBrowser.postJson(getServerAddress()
-                + "api/adapter.json", adapterDto);
+                + "adapter-api/adapter", adapterDto);
 
         assertFalse(response.contains("Error. Forbidden."));
 
@@ -80,11 +78,11 @@ public class ApiControllerTest extends NinjaTest {
         // Fetch adapters again => assert we got a new one ...
         // /////////////////////////////////////////////////////////////////////
         response = ninjaTestBrowser.makeJsonRequest(getServerAddress()
-                + "api/adapters.json");
+                + "adapter-api/adapters");
 
         adaptersDto = getGsonWithLongToDateParsing().fromJson(response, AdaptersDto.class);
         // one new result:
-        assertEquals(2, adaptersDto.adapters.size());
+        assertEquals(1, adaptersDto.adapters.size());
 
     }
 
@@ -95,7 +93,7 @@ public class ApiControllerTest extends NinjaTest {
         // Test initial data:
         // /////////////////////////////////////////////////////////////////////
         String response = ninjaTestBrowser.makeJsonRequest(getServerAddress()
-                + "api/adapter/1/configfiles.json");
+                + "adapter-api/adapter/1/configfiles");
         System.out.println("response: " + response);
 
         AdapterConfigFilesDto configFilesDto = getGsonWithLongToDateParsing().fromJson(
@@ -112,15 +110,15 @@ public class ApiControllerTest extends NinjaTest {
         configFileDto.setConfigDescription("Описание");
 
         response = ninjaTestBrowser.postJson(getServerAddress()
-                + "api/adapter/1/configfile.json", configFileDto);
+                + "adapter-api/adapter/1/configfile", configFileDto);
         System.out.println("response: " + response);
 
-        assertTrue(response.contains("Error. Forbidden."));
+        assertFalse(response.contains("Error. Forbidden."));
 
         doLogin();
 
         response = ninjaTestBrowser.postJson(getServerAddress()
-                + "api/adapter/1/configfile.json", configFileDto);
+                + "adapter-api/adapter/1/configfile", configFileDto);
         System.out.println("response: " + response);
 
         assertFalse(response.contains("Error. Forbidden."));
@@ -131,74 +129,23 @@ public class ApiControllerTest extends NinjaTest {
         // Fetch configs again => assert we got a new one ...
         // /////////////////////////////////////////////////////////////////////
         response = ninjaTestBrowser.makeJsonRequest(getServerAddress()
-                + "api/adapter/1/configfiles.json");
+                + "adapter-api/adapter/1/configfiles");
         System.out.println("response: " + response);
 
         configFilesDto = getGsonWithLongToDateParsing().fromJson(response, AdapterConfigFilesDto.class);
         // one new result:
-        assertEquals(2, configFilesDto.adapterConfigFiles.size());
+        assertEquals(3, configFilesDto.adapterConfigFiles.size());
 
         // /////////////////////////////////////////////////////////////////////
         // Fetch one config.
         // /////////////////////////////////////////////////////////////////////
         response = ninjaTestBrowser.makeJsonRequest(getServerAddress()
-                + "api/adapter/1/configfile/2.json");
+                + "adapter-api/adapter/1/configfile/2");
         System.out.println("response: " + response);
 
         configFileDto = getGsonWithLongToDateParsing().fromJson(response, AdapterConfigFileDto.class);
         // one new result:
         assertTrue(response.contains("/test/test/123.conf"));
-
-    }
-
-    @Test
-    public void testGetAndPostAdapterViaXml() throws Exception {
-
-        // /////////////////////////////////////////////////////////////////////
-        // Test initial data:
-        // /////////////////////////////////////////////////////////////////////
-        String response = ninjaTestBrowser.makeXmlRequest(getServerAddress()
-                + "api/adapters.xml");
-        System.out.println("response xml: " + response);
-        
-        JacksonXmlModule module = new JacksonXmlModule();
-        // and then configure, for example:
-        module.setDefaultUseWrapper(false);
-        XmlMapper xmlMapper = new XmlMapper(module);
-        
-
-        AdaptersDto adaptersDto = xmlMapper.readValue(response, AdaptersDto.class);
-
-        assertEquals(1, adaptersDto.adapters.size());
-
-        // /////////////////////////////////////////////////////////////////////
-        // Post new adapter:
-        // /////////////////////////////////////////////////////////////////////
-        AdapterDto adapterDto = new AdapterDto();
-        adapterDto.content = "contentcontent";
-        adapterDto.title = "new title new title";
-
-        response = ninjaTestBrowser.postXml(getServerAddress()
-                + "api/adapter.xml", adapterDto);
-
-        assertTrue(response.contains("Error. Forbidden."));
-
-        doLogin();
-
-        response = ninjaTestBrowser.postXml(getServerAddress()
-                + "api/adapter.xml", adapterDto);
-
-        assertFalse(response.contains("Error. Forbidden."));
-
-        // /////////////////////////////////////////////////////////////////////
-        // Fetch adapters again => assert we got a new one ...
-        // /////////////////////////////////////////////////////////////////////
-        response = ninjaTestBrowser.makeXmlRequest(getServerAddress()
-                + "api/adapters.xml");
-
-        adaptersDto = xmlMapper.readValue(response, AdaptersDto.class);
-        // one new result:
-        assertEquals(2, adaptersDto.adapters.size());
 
     }
 

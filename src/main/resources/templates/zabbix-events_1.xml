@@ -2,36 +2,32 @@
 
 <template name="Zabbix Events">
     <properties>
-        <property name="adaptersDirectoryFullPath" label="Путь к директории адаптеров" format="format"
-                  defValue="/home/user007/zsm/adapters"/>
-        <property name="adapterDirectory" label="Директория адаптера" format=".*" defValue="camelZabbixMain"
-                  unique="true"/>
-        <property name="adapterFileName" label="Имя файла адаптера" format=".*" defValue="camelZabbix_main.jar"
-                  unique="true"/>
+        <property name="adaptersDirectoryFullPath" label="Путь к директории адаптеров" format=".*" defValue="/opt/adapters/zsm/adapters"/>
+        <property name="adapterDirectory" label="Директория адаптера" format=".*" defValue="camelZabbixMain" unique="true"/>
+        <property name="adapterFileName" label="Имя файла адаптера" format=".*\.jar$" defValue="camelZabbix_main.jar" unique="true"/>
         <property name="adapterTitle" label="Название" format=".*" defValue="Zabbix Event Adapter Main" unique="true"/>
-        <property name="adapterName" label="сситемное Имя адаптера" format="[a-z]*" defValue="ZABBIX_EVENT_ADAPTER_MAIN"
-                  unique="true"/>
+        <property name="adapterName" label="Системное имя адаптера" format="[a-z]*" defValue="ZABBIX_EVENT_ADAPTER_MAIN" unique="true"/>
         <property name="adapterDescription" label="Описание" format=".*" defValue="Описание Описание Описание Описание
-            \n Описание Описание Описание"/>
-        <property name="adapterShFileName" label="Файл управления" format=".*" defValue="ZabbixEventsAdapter_main.sh"
-                  unique="true"/>
-        <property name="mainLogFile" label="Лог-файл" format=".*" defValue="adapter.log"/>
-        <property name="errorLogFile" label="Лог-файл ошибок" format=".*" defValue="errors.log"/>
+            Описание Описание Описание"/>
+        <property name="adapterShFileName" label="Файл управления" format=".*" defValue="ZabbixEventsAdapter_main.sh" unique="true"/>
+        <property name="mainLogFile" label="Лог-файл" format="[a-z]+\.log$" defValue="adapter.log"/>
+        <property name="errorLogFile" label="Лог-файл ошибок" format="[a-z]+\.log$" defValue="errors.log"/>
     </properties>
     <sources>
         <source name="adapterLibsDir" type="dir" target="${adaptersDirectoryFullPath}/${adapterDirectory}">
-            templates/zabbixEventsAdapter
+            templates/zabbixEventsAdapter/main
         </source>
-        <source name="adapterJarFile" type="file"
-                target="${adaptersDirectoryFullPath}/${adapterDirectory}/${adapterFileName}">
-            templates/zabbixEventsAdapter/camelZabbix.jar
+        <source name="adapterJarFile" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/${adapterFileName}">
+            templates/zabbixEventsAdapter/extra/camelZabbix.jar
         </source>
         <source name="adapterShFile" type="file" target="${adaptersDirectoryFullPath}/${adapterShFileName}">
-            templates/zabbixEventsAdapter/ZabbixEventsAdapter.sh
+            templates/zabbixEventsAdapter/extra/ZabbixEventsAdapter.sh
         </source>
-        <source name="adapterLogProperties" type="file"
-                target="${adaptersDirectoryFullPath}/${adapterDirectory}/${mainLogFile}">
-            templates/zabbixEventsAdapter/log4j.properties
+        <source name="adapterLogProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/${mainLogFile}">
+            templates/zabbixEventsAdapter/extra/log4j.properties
+        </source>
+        <source name="adapterMainProperties" type="file" target="/opt/adapters/zsm/adapters/Zabbix2.4/zabbixapi.properties">
+            templates/zabbixEventsAdapter/extra/zabbixapi.properties
         </source>
         <configs>
             <config id="1">templates/conf/zabbixapi.properties</config>
@@ -40,35 +36,30 @@
         </configs>
     </sources>
     <mainConfigProperties>
-        <mainConfigProperty id="1" name="title" description="description1" format="format1">${adapterTitle}
+        <mainConfigProperty id="1" name="title" description="description" format="format">${adapterTitle}
         </mainConfigProperty>
-        <mainConfigProperty id="2" name="content" description="description1" format="format1">${adapterDescription}
+        <mainConfigProperty id="2" name="content" description="description" format="format"><![CDATA[${adapterDescription}]]>
         </mainConfigProperty>
-        <mainConfigProperty id="3" name="jarFileName" description="description1" format="format1">${adapterFileName}
+        <mainConfigProperty id="3" name="jarFileName" description="description" format="format">${adapterFileName}
         </mainConfigProperty>
-        <mainConfigProperty id="4" name="jarFilePath" description="description1" format="format1">
+        <mainConfigProperty id="4" name="jarFilePath" description="description" format="format">
             ${adaptersDirectoryFullPath}/${adapterDirectory}
         </mainConfigProperty>
-        <mainConfigProperty id="5" name="checkStatusCommands" description="description1" format="format1">
-            ps -ef | grep -i ${adapterFileName} | grep -v grep
-        </mainConfigProperty>
+        <mainConfigProperty id="5" name="checkStatusCommands" description="description" format="format">
+            <![CDATA[ps -ef | grep -i ${adapterFileName} | grep -v grep]]></mainConfigProperty>
         <mainConfigProperty id="6" name="startCommands" description="description" format="format">
-            ${adaptersDirectoryFullPath}/${adapterShFileName} start
-        </mainConfigProperty>
+            <![CDATA[${adaptersDirectoryFullPath}/${adapterShFileName} start]]></mainConfigProperty>
         <mainConfigProperty id="7" name="stopCommands" description="description" format="format">
-            ${adaptersDirectoryFullPath}/${adapterShFileName} stop
-        </mainConfigProperty>
+            <![CDATA[${adaptersDirectoryFullPath}/${adapterShFileName} stop]]></mainConfigProperty>
         <mainConfigProperty id="8" name="logFile" description="description" format="format">
-            ${adaptersDirectoryFullPath}/${adapterDirectory}/${mainLogFile}
-        </mainConfigProperty>
+            <![CDATA[${adaptersDirectoryFullPath}/${adapterDirectory}/${mainLogFile}]]></mainConfigProperty>
         <mainConfigProperty id="9" name="errorLogFile" description="description" format="format">
-            ${adaptersDirectoryFullPath}/${adapterDirectory}/${errorLogFile}
-        </mainConfigProperty>
+            <![CDATA[${adaptersDirectoryFullPath}/${adapterDirectory}/${errorLogFile}]]></mainConfigProperty>
     </mainConfigProperties>
     <configFiles>
         <configFile id="1" configFile="${adaptersDirectoryFullPath}/${adapterDirectory}/zabbixapi.properties"
                     targetEncoding="ISO-8859-1"
-                    description="Файл настроек параметров Zabbix ">
+                    description="Файл настроек параметров Zabbix">
             <confProperties>
                 <confProperty id="1" label="Период опроса" name="delay" format="^[0-9]{1,5}$">5</confProperty>
                 <confProperty id="2" label="URL API zabbix" name="zabbixapiurl" format=".*">
@@ -84,7 +75,7 @@
                               name="zabbixtemplatepattern" format=".*">.*--(.*)--.*
                 </confProperty>
                 <confProperty id="6" label="Формат групп хостов для выявления сервиса" name="zabbixtemplatepattern"
-                              format=".*">\\((.*)\\)(.*)
+                              format=".*"><![CDATA[\\((.*)\\)(.*)]]>
                 </confProperty>
             </confProperties>
 

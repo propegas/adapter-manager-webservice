@@ -109,24 +109,25 @@ public class Routes implements ApplicationRoutes {
         // Api for management of software
         ///////////////////////////////////////////////////////////////////////
         // main
-        router.POST().route("/api/login").with(ApiController.class, "apiLoginPost");
-        router.GET().route("/api/logout").with(ApiController.class, "apiLogout");
-        router.GET().route("/api/auth/check").with(ApiController.class, "apiAuthCheck");
-        router.GET().route("/api/adapters.json").with(ApiController.class, "getAdaptersJson");
-        router.GET().route("/api/adapter/{id}.json").with(ApiController.class, "getAdapterJson");
-        router.GET().route("/api/adapters.xml").with(ApiController.class, "getAdaptersXml");
-        router.POST().route("/api/adapter.json").with(ApiController.class, "postAdapterJson");
-        router.POST().route("/api/adapter.xml").with(ApiController.class, "postAdapterXml");
-        router.GET().route("/api/adapter/{id}/log").with(ApiController.class, "getAdapterLogJson");
+        router.POST().route("/adapter-api/login").with(ApiController.class, "apiLoginPost");
+        router.GET().route("/adapter-api/logout").with(ApiController.class, "apiLogout");
+        router.GET().route("/adapter-api/auth/check").with(ApiController.class, "apiAuthCheck");
+        router.GET().route("/adapter-api/adapters").with(ApiController.class, "getAdaptersJson");
+        router.GET().route("/adapter-api/adapter/{id}/get").with(ApiController.class, "getAdapterJson");
+        router.GET().route("/adapter-api/adapters.xml").with(ApiController.class, "getAdaptersXml");
+        router.POST().route("/adapter-api/adapter/new").with(ApiController.class, "postAdapterJson");
+        router.POST().route("/adapter-api/adapter.xml").with(ApiController.class, "postAdapterXml");
+        router.GET().route("/adapter-api/adapter/{id}/log").with(ApiController.class, "getAdapterLogJson");
+        router.GET().route("/adapter-api/adapter/{id}/manage").with(ApiController.class, "adapterManagePost");
         // config files
-        router.GET().route("/api/adapter/{id}/configfiles.json").with(ApiController.class, "getConfigFilesJson");
-        router.GET().route("/api/adapter/{id}/configfile/{confid}.json").with(ApiController.class, "getConfigFileJson");
-        router.POST().route("/api/adapter/{id}/configfile.json").with(ApiController.class, "postConfigFileJson");
-        router.GET().route("/api/adapter/{id}/configfile/{confid}/getrawcontent.json").with(ApiController.class, "getConfigFileRawContentJson");
-        router.POST().route("/api/adapter/{id}/configfile/{confid}/postrawcontent.json").with(ApiController.class, "postConfigFileRawContentJson");
+        router.GET().route("/adapter-api/adapter/{id}/configfiles").with(ApiController.class, "getConfigFilesJson");
+        router.GET().route("/adapter-api/adapter/{id}/configfile/{confid}").with(ApiController.class, "getConfigFileJson");
+        router.POST().route("/adapter-api/adapter/{id}/configfile").with(ApiController.class, "postConfigFileJson");
+        router.GET().route("/adapter-api/adapter/{id}/configfile/{confid}/getrawcontent").with(ApiController.class, "getConfigFileRawContentJson");
+        router.POST().route("/adapter-api/adapter/{id}/configfile/{confid}/postrawcontent").with(ApiController.class, "postConfigFileRawContentJson");
         // adapter templates
         router.GET().route("/adapter-api/templates").with(ApiController.class, "getAdapterTemplatesJson");
-        router.GET().route("/adapter-api/template/{id}").with(ApiController.class, "getAdapterTemplateJson");
+        router.GET().route("/adapter-api/template/{id}/get").with(ApiController.class, "getAdapterTemplateJson");
         router.GET().route("/adapter-api/template/{id}/properties").with(ApiController.class, "getAdapterTemplatePropertiesJson");
         router.POST().route("/adapter-api/template/{id}/properties").with(ApiController.class, "postAdapterTemplatePropertiesJson");
         router.POST().route("/adapter-api/template/{id}/xmlfileid/{xmlfileid}/configfile/{confid}/properties")
