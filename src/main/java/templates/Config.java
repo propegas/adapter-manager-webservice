@@ -47,7 +47,7 @@ public class Config {
      *     
      */
     public String getValue() {
-        return value;
+        return value.trim();
     }
 
     /**

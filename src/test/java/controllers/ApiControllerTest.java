@@ -24,6 +24,7 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import models.AdapterConfigFileDto;
+import models.AdapterConfigFileProperty;
 import models.AdapterConfigFilesDto;
 import models.AdapterDto;
 import models.AdaptersDto;
@@ -32,6 +33,7 @@ import org.junit.Test;
 
 import java.lang.reflect.Type;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -94,7 +96,7 @@ public class ApiControllerTest extends NinjaTest {
         // /////////////////////////////////////////////////////////////////////
         String response = ninjaTestBrowser.makeJsonRequest(getServerAddress()
                 + "adapter-api/adapter/1/configfiles");
-        System.out.println("response: " + response);
+        System.out.println("configfiles response: " + response);
 
         AdapterConfigFilesDto configFilesDto = getGsonWithLongToDateParsing().fromJson(
                 response, AdapterConfigFilesDto.class);
@@ -107,11 +109,18 @@ public class ApiControllerTest extends NinjaTest {
         AdapterConfigFileDto configFileDto = new AdapterConfigFileDto();
         configFileDto.adapterId = (long) 1;
         configFileDto.configFile = "/test/test/123.conf";
-        configFileDto.setConfigDescription("Описание");
+        configFileDto.setConfigDescription("Описание test");
+        Map<String, AdapterConfigFileProperty> testKeys = new HashMap<>();
+        AdapterConfigFileProperty propValues = new AdapterConfigFileProperty();
+        propValues.setPropertyName("delay");
+        propValues.setPropertyValue("1234");
+        propValues.setPropertyLabel("bla bla 123");
+        testKeys.put("delay", propValues);
+        configFileDto.setConfFileProperties(testKeys);
 
         response = ninjaTestBrowser.postJson(getServerAddress()
                 + "adapter-api/adapter/1/configfile", configFileDto);
-        System.out.println("response: " + response);
+        System.out.println("first response: " + response);
 
         assertFalse(response.contains("Error. Forbidden."));
 
@@ -119,7 +128,7 @@ public class ApiControllerTest extends NinjaTest {
 
         response = ninjaTestBrowser.postJson(getServerAddress()
                 + "adapter-api/adapter/1/configfile", configFileDto);
-        System.out.println("response: " + response);
+        System.out.println("second response: " + response);
 
         assertFalse(response.contains("Error. Forbidden."));
 
@@ -130,7 +139,7 @@ public class ApiControllerTest extends NinjaTest {
         // /////////////////////////////////////////////////////////////////////
         response = ninjaTestBrowser.makeJsonRequest(getServerAddress()
                 + "adapter-api/adapter/1/configfiles");
-        System.out.println("response: " + response);
+        System.out.println("3 response: " + response);
 
         configFilesDto = getGsonWithLongToDateParsing().fromJson(response, AdapterConfigFilesDto.class);
         // one new result:
@@ -141,7 +150,7 @@ public class ApiControllerTest extends NinjaTest {
         // /////////////////////////////////////////////////////////////////////
         response = ninjaTestBrowser.makeJsonRequest(getServerAddress()
                 + "adapter-api/adapter/1/configfile/2");
-        System.out.println("response: " + response);
+        System.out.println("4 response: " + response);
 
         configFileDto = getGsonWithLongToDateParsing().fromJson(response, AdapterConfigFileDto.class);
         // one new result:

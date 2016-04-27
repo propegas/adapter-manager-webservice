@@ -58,7 +58,7 @@ public class Property {
      *     
      */
     public String getValue() {
-        return value;
+        return value.trim();
     }
 
     /**

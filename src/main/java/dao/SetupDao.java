@@ -6,11 +6,13 @@ import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 import models.Adapter;
 import models.AdapterConfigFile;
+import models.AdapterConfigFileProperty;
 import models.UserAuth;
 
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
 import javax.persistence.Query;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SetupDao {
@@ -53,6 +55,13 @@ public class SetupDao {
             System.out.println("[***TEST***] Adapter Id: " + bobPost3.id);
             AdapterConfigFile testConfFile = new AdapterConfigFile(bobPost3.id, "/home/file.properties");
             testConfFile.setConfigDescription("Test тест ЙЦУЙЦУ Zabbix.");
+            List<AdapterConfigFileProperty> testKeys = new ArrayList<>();
+            AdapterConfigFileProperty propValues = new AdapterConfigFileProperty();
+            propValues.setPropertyName("delay");
+            propValues.setPropertyValue("123");
+            propValues.setPropertyLabel("bla bla");
+            testKeys.add(propValues);
+            testConfFile.setConfigFilePropertyList(testKeys);
             entityManager.persist(testConfFile);
 
             entityManager.setFlushMode(FlushModeType.COMMIT);

@@ -58,7 +58,7 @@ public class ConfProperty {
      *     
      */
     public String getValue() {
-        return value;
+        return value.trim();
     }
 
     /**

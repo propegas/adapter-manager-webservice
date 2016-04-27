@@ -36,7 +36,7 @@ public class GlobalPropertyDao {
     Provider<EntityManager> entityManagerProvider;
 
     @UnitOfWork
-    public List<GlobalProperty> getAllProperies() {
+    public List<GlobalProperty> getAllProperties() {
 
         EntityManager entityManager = entityManagerProvider.get();
 

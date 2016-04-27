@@ -56,7 +56,7 @@ public class MainConfigProperty {
      *     
      */
     public String getValue() {
-        return value;
+        return value.trim();
     }
 
     /**

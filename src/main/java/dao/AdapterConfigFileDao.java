@@ -22,16 +22,21 @@ import com.google.inject.persist.Transactional;
 import models.Adapter;
 import models.AdapterConfigFile;
 import models.AdapterConfigFileDto;
+import models.AdapterConfigFileProperty;
 import models.AdapterConfigFilesDto;
 import ninja.jpa.UnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class AdapterConfigFileDao {
 
@@ -45,11 +50,28 @@ public class AdapterConfigFileDao {
     public AdapterConfigFilesDto getAllConfigsByAdapterId(Long adapterId) {
 
         EntityManager entityManager = entityManagerProvider.get();
+        EntityTransaction transaction = entityManager.getTransaction();
+
+        transaction.begin();
 
         TypedQuery<AdapterConfigFile> query = entityManager
                 .createQuery("SELECT x FROM AdapterConfigFile x where x.adapterId = :adapterId",
                         AdapterConfigFile.class);
         List<AdapterConfigFile> configFiles = query.setParameter("adapterId", adapterId).getResultList();
+
+        for (Iterator iterator1 =
+             configFiles.iterator(); iterator1.hasNext(); ) {
+            AdapterConfigFile configFile = (AdapterConfigFile) iterator1.next();
+            System.out.print("*** Conf File ID: " + configFile.getId());
+            System.out.print("*** Conf File File: " + configFile.getConfigFile());
+            List<AdapterConfigFileProperty> confKeys = configFile.getConfigFilePropertyList();
+            for (Iterator iterator2 =
+                 confKeys.iterator(); iterator2.hasNext(); ) {
+                AdapterConfigFileProperty confKey = (AdapterConfigFileProperty) iterator2.next();
+                System.out.println("***** PropertyName: " + confKey.getPropertyName());
+            }
+
+        }
 
         AdapterConfigFilesDto configFilesDto = new AdapterConfigFilesDto();
         configFilesDto.adapterConfigFiles = configFiles;
@@ -82,15 +104,25 @@ public class AdapterConfigFileDao {
                 "WHERE x.id = :idParam " +
                 "AND x.adapterId = :adapIdParam");
 
-        return (AdapterConfigFile) q.setParameter("idParam", id)
+        AdapterConfigFile confFile = (AdapterConfigFile) q.setParameter("idParam", id)
                 .setParameter("adapIdParam", adapterId)
                 .getSingleResult();
+
+        List<AdapterConfigFileProperty> confKeys = confFile.getConfigFilePropertyList();
+        for (AdapterConfigFileProperty confKey : confKeys) {
+            System.out.println("***** PropertyName: " + confKey.getPropertyName());
+        }
+
+        return confFile;
 
     }
 
     @Transactional
     public AdapterConfigFile postConfigFile(Long adapterId, AdapterConfigFileDto configFileDto) {
         EntityManager entityManager = entityManagerProvider.get();
+        EntityTransaction transaction = entityManager.getTransaction();
+
+        //transaction.begin();
 
         Query query = entityManager.createQuery("SELECT x FROM Adapter x WHERE x.id = :adapIdParam");
         Adapter adapter = (Adapter) query.setParameter("adapIdParam", adapterId).getSingleResult();
@@ -104,7 +136,22 @@ public class AdapterConfigFileDao {
         AdapterConfigFile configFile = new AdapterConfigFile(adapterId, configFileDto.configFile);
         configFile.setConfigDescription(configFileDto.getConfigDescription());
 
+        //configFileEntity.getConfProperties()
+        List<AdapterConfigFileProperty> keyList = new ArrayList<>();
+
+        for (Map.Entry<String, AdapterConfigFileProperty> entry : configFileDto.getConfFileProperties().entrySet()) {
+            AdapterConfigFileProperty keys = new AdapterConfigFileProperty();
+            keys.setPropertyName(entry.getKey());
+            keys.setPropertyLabel(entry.getValue().getPropertyLabel());
+            keys.setPropertyValue(entry.getValue().getPropertyValue());
+
+            keyList.add(keys);
+        }
+
+
+        configFile.setConfigFilePropertyList(keyList);
         entityManager.persist(configFile);
+       // transaction.commit();
         entityManager.flush();
 
         return configFile;

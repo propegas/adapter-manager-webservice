@@ -10,8 +10,8 @@
         <property name="adapterDescription" label="Описание" format=".*" defValue="Описание Описание Описание Описание
             Описание Описание Описание"/>
         <property name="adapterShFileName" label="Файл управления" format=".*" defValue="ZabbixEventsAdapter_main.sh" unique="true"/>
-        <property name="mainLogFile" label="Лог-файл" format="[a-z]+\.log$" defValue="adapter.log"/>
-        <property name="errorLogFile" label="Лог-файл ошибок" format="[a-z]+\.log$" defValue="errors.log"/>
+        <property name="mainLogFile" label="Лог-файл" format="^[\w,\s-]+\.[A-Za-z]{3}$" defValue="adapter.log"/>
+        <property name="errorLogFile" label="Лог-файл ошибок" format="^[\w,\s-]+\.[A-Za-z]{3}$" defValue="errors.log"/>
     </properties>
     <sources>
         <source name="adapterLibsDir" type="dir" target="${adaptersDirectoryFullPath}/${adapterDirectory}">
@@ -20,10 +20,10 @@
         <source name="adapterJarFile" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/${adapterFileName}">
             templates/zabbixEventsAdapter/extra/camelZabbix.jar
         </source>
-        <source name="adapterShFile" type="file" target="${adaptersDirectoryFullPath}/${adapterShFileName}">
+        <source name="adapterShFile" type="file" target="${adaptersDirectoryFullPath}/${adapterShFileName}" executable="true">
             templates/zabbixEventsAdapter/extra/ZabbixEventsAdapter.sh
         </source>
-        <source name="adapterLogProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/${mainLogFile}">
+        <source name="adapterLogProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/log4j.properties">
             templates/zabbixEventsAdapter/extra/log4j.properties
         </source>
         <source name="adapterMainProperties" type="file" target="/opt/adapters/zsm/adapters/Zabbix2.4/zabbixapi.properties">
@@ -97,9 +97,9 @@
                     targetEncoding="UTF-8"
                     description="Файл настройки логирования">
             <confProperties>
-                <confProperty id="1" label="label" name="log_level" format="(^INFO$|^DEBUG$)">INFO</confProperty>
-                <confProperty id="2" label="label" name="log_file" format="^[\w,\s-]+\.[A-Za-z]{3}$"
-                              globalConfig="true">${mainLogFile}
+                <confProperty id="1" label="Уровень логирования" name="log_level" format="(^INFO$|^DEBUG$)">INFO</confProperty>
+                <confProperty id="2" label="Лог-файл" name="log_file" format="^[\w,\s-]+\.[A-Za-z]{3}$"
+                              globalConfig="false">${mainLogFile}
                 </confProperty>
             </confProperties>
 

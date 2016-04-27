@@ -351,6 +351,7 @@ public class AdapterManager {
         //List<AdapterConfigFile> createdAdapterConfigFiles = new ArrayList<>();
         String errorText;
         String successText = "";
+        File destAdapterDir = null;
         for (Source source : sourceList) {
             String sourcePath = source.getValue().trim();
             String sourceType = source.getType().trim();
@@ -360,9 +361,10 @@ public class AdapterManager {
 
             File sourceFile = new File(sourcePath);
             File destFile = new File(sourceTarget);
+
             if ("dir".equals(sourceType)) {
                 // move files
-
+                destAdapterDir = destFile;
                 logger.debug(String.format("Копируем директорию %s в директорию %s ...",
                         sourceFile, destFile));
                 if (destFile.exists()){
@@ -378,9 +380,9 @@ public class AdapterManager {
                     FileUtils.copyDirectory(sourceFile, destFile);
                 } catch (IOException e) {
                     try {
-                        FileUtils.deleteDirectory(destFile);
+                        FileUtils.deleteDirectory(destAdapterDir);
                     } catch (IOException e1) {
-                        logger.error("Ошибка при удалении диретории после сбоая установки ", e);
+                        logger.error("Ошибка при удалении директории после сбоя установки ", e1);
                     }
                     errorText = String.format("Ошибка при копировании директории %s в %s ",
                             sourceFile, destFile);
@@ -393,9 +395,18 @@ public class AdapterManager {
 
                 logger.debug(String.format("Копируем файл %s в файл %s ...",
                         sourceFile, destFile));
+
+                // set executable
                 try {
                     FileUtils.copyFile(sourceFile, destFile);
+                    if (source.isExecutable())
+                        destFile.setExecutable(true);
                 } catch (IOException e) {
+                    try {
+                        FileUtils.deleteDirectory(destAdapterDir);
+                    } catch (Exception e1) {
+                        logger.error("Ошибка при удалении директории после сбоя установки ", e1);
+                    }
                     errorText = String.format("Ошибка при копировании файла %s в %s ",
                             sourceFile, destFile);
                     logger.error(errorText, e);
@@ -408,6 +419,7 @@ public class AdapterManager {
         successText += "Директория и файлы адаптера добавлены.";
         map.put("text", successText);
         map.put("result", true);
+        map.put("dir", destAdapterDir);
         return map;
 
     }

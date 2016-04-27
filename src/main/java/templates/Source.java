@@ -43,6 +43,8 @@ public class Source {
     protected String type;
     @XmlAttribute(name = "target")
     protected String target;
+    @XmlAttribute(name = "executable")
+    private boolean executable;
 
     /**
      * Gets the value of the value property.
@@ -53,7 +55,7 @@ public class Source {
      *     
      */
     public String getValue() {
-        return value;
+        return value.trim();
     }
 
     /**
@@ -140,4 +142,11 @@ public class Source {
         this.target = value;
     }
 
+    public boolean isExecutable() {
+        return executable;
+    }
+
+    public void setExecutable(boolean executable) {
+        this.executable = executable;
+    }
 }

@@ -6,26 +6,26 @@
         <property name="adapterDirectory" label="Директория адаптера" format=".*" defValue="camelZabbixDevicesMain" unique="true"/>
         <property name="adapterFileName" label="Имя файла адаптера" format=".*\.jar$" defValue="camelZabbixDevices_main.jar" unique="true"/>
         <property name="adapterTitle" label="Название" format=".*" defValue="Zabbix Devices Adapter Main" unique="true"/>
-        <property name="adapterName" label="Системное имя адаптера" format="[a-z]*" defValue="ZABBIX_EVENT_ADAPTER_MAIN" unique="true"/>
+        <property name="adapterName" label="Системное имя адаптера" format="[a-z]*" defValue="ZABBIX_DEVICE_ADAPTER_MAIN" unique="true"/>
         <property name="adapterDescription" label="Описание" format=".*" defValue="Адаптер для сбора КЕ и связей между ними из Zabbix"/>
         <property name="adapterShFileName" label="Файл управления" format=".*" defValue="ZabbixDevicesAdapter_main.sh" unique="true"/>
-        <property name="mainLogFile" label="Лог-файл" format="[a-z]+\.log$" defValue="adapter.log"/>
-        <property name="errorLogFile" label="Лог-файл ошибок" format="[a-z]+\.log$" defValue="errors.log"/>
+        <property name="mainLogFile" label="Лог-файл" format="^[\w,\s-]+\.[A-Za-z]{3}$" defValue="adapter.log"/>
+        <property name="errorLogFile" label="Лог-файл ошибок" format="^[\w,\s-]+\.[A-Za-z]{3}$" defValue="errors.log"/>
     </properties>
     <sources>
         <source name="adapterLibsDir" type="dir" target="${adaptersDirectoryFullPath}/${adapterDirectory}">
-            templates/zabbixEventsAdapter/main
+            templates/zabbixDevicesAdapter/main
         </source>
         <source name="adapterJarFile" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/${adapterFileName}">
             templates/zabbixDevicesAdapter/extra/camelZabbixDevices.jar
         </source>
-        <source name="adapterShFile" type="file" target="${adaptersDirectoryFullPath}/${adapterShFileName}">
+        <source name="adapterShFile" type="file" target="${adaptersDirectoryFullPath}/${adapterShFileName}" executable="true">
             templates/zabbixDevicesAdapter/extra/ZabbixDevicesAdapter.sh
         </source>
-        <source name="adapterLogProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/${mainLogFile}">
+        <source name="adapterLogProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/log4j.properties">
             templates/zabbixDevicesAdapter/extra/log4j.properties
         </source>
-        <source name="adapterMainProperties" type="file" target="/opt/adapters/zsm/adapters/Zabbix2.4/zabbixapi.properties">
+        <source name="adapterMainProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/zabbixapi.properties">
             templates/zabbixDevicesAdapter/extra/zabbixapi.properties
         </source>
         <configs>
@@ -99,9 +99,9 @@
                     targetEncoding="UTF-8"
                     description="Файл настройки логирования">
             <confProperties>
-                <confProperty id="1" label="label" name="log_level" format="(^INFO$|^DEBUG$)">INFO</confProperty>
-                <confProperty id="2" label="label" name="log_file" format="^[\w,\s-]+\.[A-Za-z]{3}$"
-                              globalConfig="true">${mainLogFile}
+                <confProperty id="1" label="Уровень логирования" name="log_level" format="(^INFO$|^DEBUG$)">INFO</confProperty>
+                <confProperty id="2" label="Лог-файл" name="log_file" format="^[\w,\s-]+\.[A-Za-z]{3}$"
+                              globalConfig="false">${mainLogFile}
                 </confProperty>
             </confProperties>
 

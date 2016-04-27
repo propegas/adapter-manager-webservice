@@ -202,7 +202,7 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>4.0</version>
                 <configuration>
-                    <url>jdbc:postgresql://172.20.19.191:5432/adapters</url>
+                    <url>jdbc:postgresql://192.168.157.73:5432/adapters-dev</url>
                     <user>pg_adapters</user>
                     <password>adapters_!</password>
                 </configuration>
@@ -270,7 +270,7 @@
                 </includes>
                 <excludes>
                     <exclude>**/*.java</exclude>
-                    <exclude>template/**</exclude>
+                    <!--<exclude>template/**</exclude>-->
                 </excludes>
             </resource>
             <resource>

@@ -19,6 +19,7 @@ package controllers;
 import com.devdaily.system.AdapterManager;
 import com.devdaily.system.ConfigFileContent;
 import com.google.inject.Inject;
+import dao.AdapterConfFileKeyDao;
 import dao.AdapterConfigFileDao;
 import dao.AdapterDao;
 import dao.AdapterTemplateDao;
@@ -29,6 +30,7 @@ import etc.LoggedInUser;
 import models.Adapter;
 import models.AdapterConfigFile;
 import models.AdapterConfigFileDto;
+import models.AdapterConfigFileProperty;
 import models.AdapterConfigFilesDto;
 import models.AdapterDto;
 import models.AdapterTemplate;
@@ -47,6 +49,7 @@ import ninja.params.PathParam;
 import ninja.session.Session;
 import ninja.validation.JSR303Validation;
 import ninja.validation.Validation;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import templates.ConfProperty;
@@ -98,6 +101,9 @@ public class ApiController {
 
     @Inject
     GlobalPropertyDao globalPropertyDao;
+
+    @Inject
+    AdapterConfFileKeyDao configFilePropertyDao;
 
     //@FilterWith(SecureFilter.class)
     public Result getAdaptersJson() {
@@ -279,7 +285,7 @@ public class ApiController {
     public Result getConfigFilesJson(@PathParam("id") Long adapterId) {
 
         AdapterConfigFilesDto adapterConfigFilesDto = configFileDao.getAllConfigsByAdapterId(adapterId);
-
+        logger.info(adapterConfigFilesDto.toString());
         return Results.json().render(adapterConfigFilesDto);
 
     }
@@ -538,7 +544,7 @@ public class ApiController {
     private String xmlTemplateToStringWithGlobalProperties(Template template) {
         String xmlString;
 
-        List<GlobalProperty> globalProperties = globalPropertyDao.getAllProperies();
+        List<GlobalProperty> globalProperties = globalPropertyDao.getAllProperties();
 
         try {
             JAXBContext context = JAXBContext.newInstance(Template.class);
@@ -659,6 +665,8 @@ public class ApiController {
                     .render("Message", initAdapterFilesResult.get("text"));
         }
 
+        File destAdapterDir = (File) initAdapterFilesResult.get("dir");
+
         resultMessage += "Директория с адаптером создана. ";
 
         // create adapter in DB
@@ -677,10 +685,27 @@ public class ApiController {
             AdapterConfigFileDto configFileDto = new AdapterConfigFileDto();
             configFileDto.setConfigDescription(configFile.getDescription());
             configFileDto.configFile = configFile.getConfigFile();
+            Map<String, ConfProperty> templateConfFileKeys = configFile.getConfProperties();
+            Map<String, AdapterConfigFileProperty> configFileKeys = new HashMap<>();
+            for (Map.Entry<String, ConfProperty> entry : templateConfFileKeys.entrySet()) {
+                AdapterConfigFileProperty confProperty = new AdapterConfigFileProperty();
+                confProperty.setPropertyName(entry.getValue().getName());
+                confProperty.setPropertyLabel(entry.getValue().getLabel());
+                confProperty.setPropertyValue(entry.getValue().getValue());
+                configFileKeys.put(entry.getKey(), confProperty);
+            }
+
+            configFileDto.setConfFileProperties(configFileKeys);
+            //logger.info(configFile.getConfProperties());
             AdapterConfigFile createdConfFile = configFileDao.postConfigFile(createdAdapter.id, configFileDto);
             if (createdConfFile == null) {
                 // delete adapter
                 adapterDao.deleteAdapter(createdAdapter.id, createdAdapter);
+                try {
+                    FileUtils.deleteDirectory(destAdapterDir);
+                } catch (Exception e1) {
+                    logger.error("Ошибка при удалении директории после сбоя установки ", e1);
+                }
                 return Results.badRequest().json()
                         .render(RESULT_FIELD_NAME, "Error")
                         .render("Message", "Ошибка при создании конфигурационного файла адаптера: " + configFile.getConfigFile());
@@ -692,6 +717,11 @@ public class ApiController {
             if (!succeededReplace) {
                 // delete adapter
                 adapterDao.deleteAdapter(createdAdapter.id, createdAdapter);
+                try {
+                    FileUtils.deleteDirectory(destAdapterDir);
+                } catch (Exception e1) {
+                    logger.error("Ошибка при удалении директории после сбоя установки ", e1);
+                }
                 return Results.badRequest().json()
                         .render(RESULT_FIELD_NAME, "Error")
                         .render("Message", "Ошибка при замене переменных в конфигурационном файла адаптера: " + configFile.getConfigFile());
@@ -736,12 +766,11 @@ public class ApiController {
 
         }
 
-        if ((boolean) commandResult.get("result")){
+        if ((boolean) commandResult.get("result")) {
             return Results.ok().json()
                     .render(RESULT_FIELD_NAME, "Success")
                     .render("Message", commandResult.get("text"));
-        }
-        else {
+        } else {
             return Results.badRequest().json()
                     .render(RESULT_FIELD_NAME, "Error")
                     .render("Message", commandResult.get("text"));
@@ -750,7 +779,6 @@ public class ApiController {
     }
 
     private boolean replaceVariablesInConfig(Template template, ConfigFile configFile) {
-
 
         logger.info(String.format("Замена переменных в файле %s...",
                 configFile.getConfigFile()));
@@ -799,6 +827,8 @@ public class ApiController {
                 logger.error(error, e);
                 return false;
             }
+
+            //configFilePropertyDao.
         }
 
 
@@ -913,7 +943,7 @@ public class ApiController {
             //gives the names of the fields
             for (Property property : properties) {
                 if (property.getName().equals(field.getName())) {
-                    property.setValue((String) field.get(templatePropertyDto));
+                    property.setValue(field.get(templatePropertyDto).toString().trim());
                     propKeys.put(property.getName(), property.getValue().trim());
                 }
             }
