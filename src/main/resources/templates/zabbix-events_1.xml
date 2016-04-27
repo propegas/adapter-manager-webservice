@@ -26,7 +26,7 @@
         <source name="adapterLogProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/log4j.properties">
             templates/zabbixEventsAdapter/extra/log4j.properties
         </source>
-        <source name="adapterMainProperties" type="file" target="/opt/adapters/zsm/adapters/Zabbix2.4/zabbixapi.properties">
+        <source name="adapterMainProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/zabbixapi.properties">
             templates/zabbixEventsAdapter/extra/zabbixapi.properties
         </source>
         <configs>
@@ -74,8 +74,14 @@
                 <confProperty id="5" label="Формат шаблонов Zabbix для выявления типа событий"
                               name="zabbixtemplatepattern" format=".*">.*--(.*)--.*
                 </confProperty>
-                <confProperty id="6" label="Формат групп хостов для выявления сервиса" name="zabbixtemplatepattern"
+                <confProperty id="6" label="Формат групп хостов для выявления сервиса" name="zabbix_group_ci_pattern"
                               format=".*"><![CDATA[\\((.*)\\)(.*)]]>
+                </confProperty>
+                <confProperty id="7" label="Частота отправки сигналов Heartbeat" name="heartbeatsdelay"
+                              format="^[0-9]{2}m$" globalConfig="true">${heartbeatsdelay}
+                </confProperty>
+                <confProperty id="8" label="Очередь для отправки сигналов Heartbeat" name="heartbeatsqueue"
+                              format=".*" globalConfig="true">${heartbeatsqueue}
                 </confProperty>
             </confProperties>
 

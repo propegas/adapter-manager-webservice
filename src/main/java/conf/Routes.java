@@ -119,10 +119,12 @@ public class Routes implements ApplicationRoutes {
         router.POST().route("/adapter-api/adapter.xml").with(ApiController.class, "postAdapterXml");
         router.GET().route("/adapter-api/adapter/{id}/log").with(ApiController.class, "getAdapterLogJson");
         router.POST().route("/adapter-api/adapter/{id}/manage").with(ApiController.class, "adapterManagePost");
+        router.POST().route("/adapter-api/adapter/{id}/delete").with(ApiController.class, "adapterDeletePost");
         // config files
         router.GET().route("/adapter-api/adapter/{id}/configfiles").with(ApiController.class, "getConfigFilesJson");
         router.GET().route("/adapter-api/adapter/{id}/configfile/{confid}").with(ApiController.class, "getConfigFileJson");
         router.POST().route("/adapter-api/adapter/{id}/configfile").with(ApiController.class, "postConfigFileJson");
+        router.POST().route("/adapter-api/adapter/{id}/configfile/{confid}/save").with(ApiController.class, "saveConfigFileJson");
         router.GET().route("/adapter-api/adapter/{id}/configfile/{confid}/getrawcontent").with(ApiController.class, "getConfigFileRawContentJson");
         router.POST().route("/adapter-api/adapter/{id}/configfile/{confid}/postrawcontent").with(ApiController.class, "postConfigFileRawContentJson");
         // adapter templates

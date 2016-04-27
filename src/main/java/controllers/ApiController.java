@@ -27,20 +27,7 @@ import dao.AdapterTemplatePropertyDao;
 import dao.GlobalPropertyDao;
 import dao.UserAuthDao;
 import etc.LoggedInUser;
-import models.Adapter;
-import models.AdapterConfigFile;
-import models.AdapterConfigFileDto;
-import models.AdapterConfigFileProperty;
-import models.AdapterConfigFilesDto;
-import models.AdapterDto;
-import models.AdapterTemplate;
-import models.AdapterTemplateProperty;
-import models.AdapterTemplatesDto;
-import models.AdaptersDto;
-import models.GlobalProperty;
-import models.TemplateConfigFilePropertiesDto;
-import models.TemplatePropertyDto;
-import models.UserAuth;
+import models.*;
 import ninja.Context;
 import ninja.Result;
 import ninja.Results;
@@ -319,6 +306,55 @@ public class ApiController {
 
     }
 
+    public Result saveConfigFileJson(@PathParam("id") Long adapterId,
+                                     @PathParam("confid") Long confId,
+                                     AdapterConfigFileSaveDto configFileDto) {
+
+        logger.debug("[TEST] configFileDto: " + configFileDto);
+        logger.debug("[TEST] adapterId: " + adapterId);
+
+        boolean saveConfigFile = configFileDao.saveConfigFile(adapterId, confId, configFileDto);
+
+        if (!saveConfigFile) {
+            return Results.notFound().render(RESULT_FIELD_NAME, "Error");
+        } else {
+            return Results.json().render(RESULT_FIELD_NAME, "Success");
+        }
+
+    }
+
+    //@FilterWith(SecureFilter.class)
+    public Result adapterDeletePost(@PathParam("id") Long id) {
+
+        Adapter adapter = null;
+
+        if (id != null) {
+            adapter = adapterDao.getAdapter(id);
+        }
+
+        if (!adapterDao.deleteAdapter(id, adapter)) {
+
+            return Results.badRequest()
+                    .render(RESULT_FIELD_NAME, "Error")
+                    .render("Message", "Ошибка при удалении записи в БД");
+
+        }
+
+        Map deleteResult = AdapterManager.deleteAdapterDir(adapter);
+        if ((boolean) deleteResult.get("result")) {
+            return Results.json()
+                    .render(RESULT_FIELD_NAME, "Success")
+                    .render("Message", deleteResult.get("text"));
+        } else {
+            return Results.json()
+                    .render(RESULT_FIELD_NAME, "Success")
+                    .render("Message", deleteResult.get("text"));
+        }
+
+
+    }
+
+
     ////////////////////////////////////////////////////////////////////////
     // Get Config File raw content
     ////////////////////////////////////////////////////////////////////////
@@ -427,7 +463,7 @@ public class ApiController {
 
             return Results.badRequest().json()
                     .render(RESULT_FIELD_NAME, "Error")
-                    .render("Message", validation.getBeanViolations());
+                    .render("Message", validation.getBeanViolations().get(0).constraintViolation.getMessageKey());
 
         }
 
@@ -724,7 +760,7 @@ public class ApiController {
                 }
                 return Results.badRequest().json()
                         .render(RESULT_FIELD_NAME, "Error")
-                        .render("Message", "Ошибка при замене переменных в конфигурационном файла адаптера: " + configFile.getConfigFile());
+                        .render("Message", "Ошибка при замене переменных в конфигурационном файле адаптера: " + configFile.getConfigFile());
             }
 
         }
@@ -830,7 +866,6 @@ public class ApiController {
 
             //configFilePropertyDao.
         }
-
 
         return true;
     }

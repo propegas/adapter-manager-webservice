@@ -344,6 +344,32 @@ public class AdapterManager {
 
     }
 
+    public static Map deleteAdapterDir(Adapter adapter) {
+
+        String adapterDir = adapter.getJarFilePath();
+        File destFile = new File(adapterDir);
+        HashMap<String, Object> map = new HashMap<>();
+        //List<AdapterConfigFile> createdAdapterConfigFiles = new ArrayList<>();
+        String errorText;
+        String successText = "";
+
+        try {
+            FileUtils.deleteDirectory(destFile);
+        } catch (IOException e) {
+            logger.error("Ошибка при удалении директории адаптера ", e);
+            errorText = String.format("Ошибка при удалении директории %s ",
+                    destFile);
+            logger.error(errorText, e);
+            map.put("text", errorText + e);
+            map.put("result", false);
+            return map;
+        }
+
+        successText += "Директория удалена.";
+        map.put("text", successText);
+        map.put("result", true);
+        return map;
+    }
     public static Map initAdapterFiles(Template template) {
 
         List<Source> sourceList = template.getSources().getSource();

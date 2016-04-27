@@ -26,6 +26,7 @@ import dao.AdapterDao;
 import models.Adapter;
 import models.AdapterConfigFile;
 import models.AdapterConfigFileDto;
+import models.AdapterConfigFileSaveDto;
 import ninja.Context;
 import ninja.FilterWith;
 import ninja.Result;
@@ -288,17 +289,18 @@ public class ConfigFileController {
         return Results.notFound();
     }
 
+
     @FilterWith(SecureFilter.class)
     public Result configFileEditPost(@PathParam("id") Long adapterId,
                                      @PathParam("confid") Long confId,
                                      Context context,
-                                     @JSR303Validation AdapterConfigFileDto configFileDto,
+                                     @JSR303Validation AdapterConfigFileSaveDto configFileDto,
                                      Validation validation) {
 
         if (validation.hasViolations()) {
 
             context.getFlashScope().error("Please correct field.");
-            context.getFlashScope().put("content", configFileDto.configFile);
+            context.getFlashScope().put("content", configFileDto.getConfFileProperties());
 
             return Results.redirect(String.format("/adapter/%d/configfile/%d/edit", adapterId, confId));
 

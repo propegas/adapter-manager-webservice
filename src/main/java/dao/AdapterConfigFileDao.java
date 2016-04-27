@@ -23,6 +23,7 @@ import models.Adapter;
 import models.AdapterConfigFile;
 import models.AdapterConfigFileDto;
 import models.AdapterConfigFileProperty;
+import models.AdapterConfigFileSaveDto;
 import models.AdapterConfigFilesDto;
 import ninja.jpa.UnitOfWork;
 import org.slf4j.Logger;
@@ -158,6 +159,7 @@ public class AdapterConfigFileDao {
 
     }
 
+
     @Transactional
     public boolean deleteConfigFile(Long adapterId, Long confId) {
 
@@ -193,7 +195,7 @@ public class AdapterConfigFileDao {
     @Transactional
     public boolean saveConfigFile(Long adapterId,
                                   Long confId,
-                                  AdapterConfigFileDto configFileDto) {
+                                  AdapterConfigFileSaveDto configFileDto) {
 
         AdapterConfigFile adapterConfigFileDb;
         EntityManager entityManager = entityManagerProvider.get();
@@ -223,8 +225,17 @@ public class AdapterConfigFileDao {
                 return false;
             }
 
-            adapterConfigFileDb.setConfigFile(configFileDto.configFile);
-            adapterConfigFileDb.setConfigDescription(configFileDto.getConfigDescription());
+            List<AdapterConfigFileProperty> keyList = new ArrayList<>();
+            for (Map.Entry<String, AdapterConfigFileProperty> entry : configFileDto.getConfFileProperties().entrySet()) {
+                AdapterConfigFileProperty keys = new AdapterConfigFileProperty();
+                keys.setPropertyName(entry.getKey());
+                keys.setPropertyValue(entry.getValue().getPropertyValue());
+                keys.setPropertyLabel(entry.getValue().getPropertyLabel());
+                keyList.add(keys);
+            }
+
+
+            adapterConfigFileDb.setConfigFilePropertyList(keyList);
             entityManager.flush();
             entityManager.refresh(adapter);
 

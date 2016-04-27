@@ -181,7 +181,7 @@ public class AdapterDao {
     }
 
     @Transactional
-    public void deleteAdapter(Long id, Adapter adapter) {
+    public boolean deleteAdapter(Long id, Adapter adapter) {
         EntityManager entityManager = entityManagerProvider.get();
 
         if (id != null) {
@@ -192,7 +192,11 @@ public class AdapterDao {
             logger.debug("Remove Adapter: " + id + " Title: " + adapter.title);
             entityManager.remove(adapterDb);
 
+            return true;
+
         }
+
+        return false;
     }
 
 }
