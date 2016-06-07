@@ -2,16 +2,22 @@
 
 <template name="Zabbix Events">
     <properties>
-        <property name="adaptersDirectoryFullPath" label="Путь к директории адаптеров" format=".*" defValue="/opt/adapters/zsm/adapters"/>
-        <property name="adapterDirectory" label="Директория адаптера" format=".*" defValue="camelZabbixMain" unique="true"/>
-        <property name="adapterFileName" label="Имя файла адаптера" format=".*\.jar$" defValue="camelZabbix_main.jar" unique="true"/>
-        <property name="adapterTitle" label="Название" format=".*" defValue="Zabbix Event Adapter Main" unique="true"/>
-        <property name="adapterName" label="Системное имя адаптера" format="[a-z]*" defValue="ZABBIX_EVENT_ADAPTER_MAIN" unique="true"/>
-        <property name="adapterDescription" label="Описание" format=".*" defValue="Описание Описание Описание Описание
-            Описание Описание Описание"/>
-        <property name="adapterShFileName" label="Файл управления" format=".*" defValue="ZabbixEventsAdapter_main.sh" unique="true"/>
-        <property name="mainLogFile" label="Лог-файл" format="^[\w,\s-]+\.[A-Za-z]{3}$" defValue="adapter.log"/>
-        <property name="errorLogFile" label="Лог-файл ошибок" format="^[\w,\s-]+\.[A-Za-z]{3}$" defValue="errors.log"/>
+        <property name="adaptersDirectoryFullPath" label="Путь к директории адаптеров" format="^[\w-\/]+"
+                  defValue="/opt/adapters/zsm/adapters"/>
+        <property name="adapterDirectory" label="Директория адаптера" format="^[\w-]+" defValue="camelZabbixMain"
+                  unique="true"/>
+        <property name="adapterFileName" label="Имя файла адаптера" format="^[\w-]+\.jar$"
+                  defValue="camelZabbix_main.jar" unique="true"/>
+        <property name="adapterTitle" label="Название" format="^[\w\s-]+" defValue="Zabbix Event Adapter Main"
+                  unique="true"/>
+        <property name="adapterName" label="Системное имя адаптера" format="^[\w-]+"
+                  defValue="ZABBIX_EVENT_ADAPTER_MAIN" unique="true"/>
+        <property name="adapterDescription" label="Описание" format=".*"
+                  defValue="адаптер по сбору и передачи событий из Zabbix"/>
+        <property name="adapterShFileName" label="Файл управления" format="^[\w-]+\.sh"
+                  defValue="ZabbixEventsAdapter_main.sh" unique="true"/>
+        <property name="mainLogFile" label="Лог-файл" format="^[\w-]+\.[A-Za-z]{3}$" defValue="adapter.log"/>
+        <property name="errorLogFile" label="Лог-файл ошибок" format="^[\w-]+\.[A-Za-z]{3}$" defValue="errors.log"/>
     </properties>
     <sources>
         <source name="adapterLibsDir" type="dir" target="${adaptersDirectoryFullPath}/${adapterDirectory}">
@@ -36,25 +42,29 @@
         </configs>
     </sources>
     <mainConfigProperties>
-        <mainConfigProperty id="1" name="title" description="description" format="format">${adapterTitle}
+        <mainConfigProperty id="1" name="title" description="description" format="^[\w\s-]+">${adapterTitle}
         </mainConfigProperty>
-        <mainConfigProperty id="2" name="content" description="description" format="format"><![CDATA[${adapterDescription}]]>
+        <mainConfigProperty id="2" name="content" description="description" format=".*">
+            <![CDATA[${adapterDescription}]]>
         </mainConfigProperty>
-        <mainConfigProperty id="3" name="jarFileName" description="description" format="format">${adapterFileName}
+        <mainConfigProperty id="3" name="jarFileName" description="description" format="^[\w-]+\.jar$">
+            ${adapterFileName}
         </mainConfigProperty>
-        <mainConfigProperty id="4" name="jarFilePath" description="description" format="format">
+        <mainConfigProperty id="4" name="jarFilePath" description="description" format="^[\w-\/]+">
             ${adaptersDirectoryFullPath}/${adapterDirectory}
         </mainConfigProperty>
-        <mainConfigProperty id="5" name="checkStatusCommands" description="description" format="format">
+        <mainConfigProperty id="5" name="checkStatusCommands" description="description" format=".*">
             <![CDATA[ps -ef | grep -i ${adapterFileName} | grep -v grep]]></mainConfigProperty>
-        <mainConfigProperty id="6" name="startCommands" description="description" format="format">
+        <mainConfigProperty id="6" name="startCommands" description="description" format=".*">
             <![CDATA[${adaptersDirectoryFullPath}/${adapterShFileName} start]]></mainConfigProperty>
-        <mainConfigProperty id="7" name="stopCommands" description="description" format="format">
+        <mainConfigProperty id="7" name="stopCommands" description="description" format=".*">
             <![CDATA[${adaptersDirectoryFullPath}/${adapterShFileName} stop]]></mainConfigProperty>
-        <mainConfigProperty id="8" name="logFile" description="description" format="format">
+        <mainConfigProperty id="8" name="logFile" description="description" format="^[\w-]+\.[A-Za-z]{3}$">
             <![CDATA[${adaptersDirectoryFullPath}/${adapterDirectory}/${mainLogFile}]]></mainConfigProperty>
-        <mainConfigProperty id="9" name="errorLogFile" description="description" format="format">
+        <mainConfigProperty id="9" name="errorLogFile" description="description" format="^[\w-]+\.[A-Za-z]{3}$">
             <![CDATA[${adaptersDirectoryFullPath}/${adapterDirectory}/${errorLogFile}]]></mainConfigProperty>
+        <mainConfigProperty id="10" name="name" description="Системное имя адаптера" format="^[\w-]+">${adapterName}
+        </mainConfigProperty>
     </mainConfigProperties>
     <configFiles>
         <configFile id="1" configFile="${adaptersDirectoryFullPath}/${adapterDirectory}/zabbixapi.properties"
@@ -62,14 +72,16 @@
                     description="Файл настроек параметров Zabbix">
             <confProperties>
                 <confProperty id="1" label="Период опроса" name="delay" format="^[0-9]{1,5}$">5</confProperty>
-                <confProperty id="2" label="URL API zabbix" name="zabbixapiurl" format=".*">
+                <confProperty id="2" label="URL API zabbix" name="zabbixapiurl"
+                              format="^(https?:\/\/)?([\w\.0-9]+)(\/[\w\.]*)*\/?$">
                     http://172.20.19.195/zabbix/api_jsonrpc.php
                 </confProperty>
-                <confProperty id="3" label="Префикс действий (action) в Zabbix" name="zabbixactionprefix" format=".*">
+                <confProperty id="3" label="Префикс действий (action) в Zabbix" name="zabbixactionprefix"
+                              format="^[\w\.\-0-9]+">
                     Trigger.Log.XML
                 </confProperty>
                 <confProperty id="4" label="URL (Namespace) в структуре XML (action)" name="zabbixactionxmlns"
-                              format=".*">http://monis.nso.ru/
+                              format="^(https?:\/\/)?([\w\.0-9]+)(\/[\w\.]*)*\/?$">http://monis.nso.ru/
                 </confProperty>
                 <confProperty id="5" label="Формат шаблонов Zabbix для выявления типа событий"
                               name="zabbixtemplatepattern" format=".*">.*--(.*)--.*
@@ -81,7 +93,7 @@
                               format="^[0-9]{2}m$" globalConfig="true">${heartbeatsdelay}
                 </confProperty>
                 <confProperty id="8" label="Очередь для отправки сигналов Heartbeat" name="heartbeatsqueue"
-                              format=".*" globalConfig="true">${heartbeatsqueue}
+                              format="^([\w]+)\.queue(\?)?([\w\.\-=\&]+)" globalConfig="true">${heartbeatsqueue}
                 </confProperty>
             </confProperties>
 

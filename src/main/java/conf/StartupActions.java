@@ -1,16 +1,18 @@
 package conf;
 
-import javax.inject.Singleton;
-
+import com.google.inject.Inject;
+import dao.SetupDao;
 import ninja.lifecycle.Start;
 import ninja.utils.NinjaProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-
-import dao.SetupDao;
+import javax.inject.Singleton;
 
 @Singleton
 public class StartupActions {
+
+    private static final Logger logger = LoggerFactory.getLogger(StartupActions.class);
     
     @Inject
     SetupDao setupDao;
@@ -26,6 +28,9 @@ public class StartupActions {
     public void generateDummyDataWhenInTest() {
         
         if (!ninjaProperties.isProd()) {
+
+            logger.debug("Ninja Dummy Data Setup Starting...");
+            System.out.println("Ninja Dummy Data Setup Starting...");
             
             setupDao.setup();
             

@@ -28,6 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.List;
@@ -54,29 +56,15 @@ public class AdapterDao {
 
     }
 
-    /*
-    @UnitOfWork
-    public Adapter getFirstAdapterForFrontPage() {
-
-        EntityManager entityManager = entityManagerProvider.get();
-
-        Query q = entityManager.createQuery("SELECT x FROM Adapter x ORDER BY x.postedAt DESC");
-
-        return (Adapter) q.setMaxResults(1).getSingleResult();
-
-
-    }
-    */
-
     @UnitOfWork
     public List<Adapter> getOlderAdaptersForFrontPage() {
 
         EntityManager entityManager = entityManagerProvider.get();
 
-        Query q = entityManager.createQuery("SELECT x FROM Adapter x ORDER BY x.title, x.postedAt DESC");
+        TypedQuery<Adapter> q = entityManager.createQuery("SELECT x FROM Adapter x ORDER BY x.title, x.postedAt DESC",
+                Adapter.class);
 
-        return (List<Adapter>) q.setFirstResult(0).setMaxResults(25).getResultList();
-
+        return q.setFirstResult(0).setMaxResults(25).getResultList();
 
     }
 
@@ -89,6 +77,16 @@ public class AdapterDao {
 
         return (Adapter) q.setParameter("idParam", id).getSingleResult();
 
+    }
+
+    @UnitOfWork
+    public Adapter getAdapterByName(String adapterName) throws NoResultException, NonUniqueResultException {
+
+        EntityManager entityManager = entityManagerProvider.get();
+
+        Query q = entityManager.createQuery("SELECT x FROM Adapter x WHERE x.name = :idParam");
+
+        return (Adapter) q.setParameter("idParam", adapterName).getSingleResult();
 
     }
 
@@ -108,6 +106,8 @@ public class AdapterDao {
         adapter.setStopCommands(adapterDto.stopCommands);
         adapter.setLogFile(adapterDto.logFile);
         adapter.setErrorLogFile(adapterDto.errorLogFile);
+        adapter.setName(adapterDto.name);
+        adapter.setHeartbeatStatus(adapterDto.heartbeatStatus);
 
         entityManager.persist(adapter);
         entityManager.flush();
@@ -168,9 +168,32 @@ public class AdapterDao {
             Query selectAdapter = entityManager.createQuery("SELECT x FROM Adapter x WHERE x.id = :idParam");
             adapter = (Adapter) selectAdapter.setParameter("idParam", id).getSingleResult();
 
-            logger.debug("Updating status for adapter " + id);
+            logger.debug("Updating process status for adapter " + id);
 
             adapter.setStatus(newStatus);
+            entityManager.flush();
+            entityManager.refresh(adapter);
+            return true;
+        }
+
+        return false;
+
+    }
+
+    @Transactional
+    public boolean updateHeartbeatStatus(Long id, String newHeartbeatStatus) {
+
+        Adapter adapter;
+        EntityManager entityManager = entityManagerProvider.get();
+
+        if (id != null) {
+
+            Query selectAdapter = entityManager.createQuery("SELECT x FROM Adapter x WHERE x.id = :idParam");
+            adapter = (Adapter) selectAdapter.setParameter("idParam", id).getSingleResult();
+
+            logger.debug("Updating Heartbeat status for adapter " + id);
+
+            adapter.setHeartbeatStatus(newHeartbeatStatus);
             entityManager.flush();
             entityManager.refresh(adapter);
             return true;

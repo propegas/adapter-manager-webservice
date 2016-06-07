@@ -27,6 +27,7 @@ public class Adapter {
     @ElementCollection(fetch=FetchType.EAGER)
     public List<Long> authorIds;
 */
+    private String name;
     private String jarFilePath;
     private String checkStatusCommands;
     private String startCommands;
@@ -34,6 +35,7 @@ public class Adapter {
     private String status;
     private String logFile;
     private String errorLogFile;
+    private String heartbeatStatus;
 
     public Adapter() {
         this.logFile = "";
@@ -119,5 +121,21 @@ public class Adapter {
 
     public void setErrorLogFile(String errorLogFile) {
         this.errorLogFile = errorLogFile;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getHeartbeatStatus() {
+        return heartbeatStatus;
+    }
+
+    public void setHeartbeatStatus(String heartbeatStatus) {
+        this.heartbeatStatus = heartbeatStatus;
     }
 }

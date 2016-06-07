@@ -54,6 +54,8 @@
             <![CDATA[${adaptersDirectoryFullPath}/${adapterDirectory}/${mainLogFile}]]></mainConfigProperty>
         <mainConfigProperty id="9" name="errorLogFile" description="description" format="format">
             <![CDATA[${adaptersDirectoryFullPath}/${adapterDirectory}/${errorLogFile}]]></mainConfigProperty>
+        <mainConfigProperty id="10" name="name" description="Системное имя адаптера" format="^[\w-]+">${adapterName}
+        </mainConfigProperty>
     </mainConfigProperties>
     <configFiles>
         <configFile id="1" configFile="${adaptersDirectoryFullPath}/${adapterDirectory}/zabbixapi.properties"

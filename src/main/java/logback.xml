@@ -4,10 +4,10 @@
         <file>mylog.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>mylog.%d{yyyy-MM-dd}.%i.log.gz</FileNamePattern>
-            <MaxHistory>30</MaxHistory>
+            <MaxHistory>10</MaxHistory>
             <timeBasedFileNamingAndTriggeringPolicy
                     class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
+                <maxFileSize>20MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>

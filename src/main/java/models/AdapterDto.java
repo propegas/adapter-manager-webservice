@@ -6,6 +6,12 @@ public class AdapterDto {
 
     @Size(min = 5)
     public String title;
+
+    @Size(min = 5)
+    public String name;
+
+    @Size(min = 5)
+    public String heartbeatStatus;
     
     @Size(min = 5)
     public String content;
