@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import dao.AdapterConfFileKeyDao;
 import dao.AdapterConfigFileDao;
 import dao.AdapterDao;
+import dao.AdapterEventDao;
 import dao.AdapterTemplateDao;
 import dao.AdapterTemplatePropertyDao;
 import dao.GlobalPropertyDao;
@@ -68,31 +69,26 @@ public class ApiController {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiController.class);
     private static final String RESULT_FIELD_NAME = "Result";
-
-    private List<Property> properties;
-
     @Inject
     AdapterDao adapterDao;
-
     @Inject
     UserAuthDao userAuthDao;
-
     @Inject
     AdapterConfigFileDao configFileDao;
-
     @Inject
     AdapterTemplateDao adapterTemplateDao;
-
     @Inject
     AdapterTemplatePropertyDao adapterTemplatePropertyDao;
-
     @Inject
     GlobalPropertyDao globalPropertyDao;
-
     @Inject
     AdapterConfFileKeyDao configFilePropertyDao;
+    @Inject
+    AdapterEventDao adapterEventDao;
+    private List<Property> properties;
 
     //@FilterWith(SecureFilter.class)
+    //@FilterWith(AuthCheck.class)
     public Result getAdaptersJson() {
 
         AdaptersDto adaptersDto = adapterDao.getAllAdapters();
@@ -308,15 +304,19 @@ public class ApiController {
 
     public Result saveConfigFileJson(@PathParam("id") Long adapterId,
                                      @PathParam("confid") Long confId,
-                                     AdapterConfigFileSaveDto configFileDto) {
+                                     AdapterConfigFileSaveDto configFileSaveDto) {
 
-        logger.debug("[TEST] configFileDto: " + configFileDto);
+        logger.debug("[TEST] configFileSaveDto: " + configFileSaveDto);
         logger.debug("[TEST] adapterId: " + adapterId);
 
-        boolean saveConfigFile = configFileDao.saveConfigFile(adapterId, confId, configFileDto);
+        AdapterConfigFile configFile = configFileDao.getConfigFile(adapterId, confId);
+
+        boolean replacePropertiesInFile = saveVariablesInConfigFile(configFile, configFileSaveDto);
+
+        boolean saveConfigFile = configFileDao.saveConfigFile(adapterId, confId, configFileSaveDto);
 
         if (!saveConfigFile) {
-            return Results.notFound().render(RESULT_FIELD_NAME, "Error");
+            return Results.badRequest().render(RESULT_FIELD_NAME, "Error");
         } else {
             return Results.json().render(RESULT_FIELD_NAME, "Success");
         }
@@ -508,7 +508,7 @@ public class ApiController {
             String xmlFileId = Long.toString(System.currentTimeMillis());
             Template templateWithProperties;
             Template templateSave;
-            // replace main Properties Placeholders
+            // replace start Properties Placeholders
             xmlString = xmlTemplateToString(template, propKeys);
             logger.debug("XML: " + xmlString);
             // save as new xml file
@@ -787,7 +787,7 @@ public class ApiController {
             adapter = adapterDao.getAdapter(id);
 
         String error = null;
-        Map commandResult = new HashMap<>();
+        Map commandResult;
 
         if ("stop".equals(command)) {
             logger.info("Пытаемся выполнить команду остановки адаптера...");
@@ -857,6 +857,41 @@ public class ApiController {
                 content = content.replaceAll(String.format("\\$\\{%s\\}",
                         entry.getKey()),
                         entry.getValue().getValue().trim());
+                Files.write(path, content.getBytes(charset));
+            } catch (IOException e) {
+                String error = "Ошибка при формировании и сохранении конфигурации в файл ";
+                logger.error(error, e);
+                return false;
+            }
+
+            //configFilePropertyDao.
+        }
+
+        return true;
+    }
+
+    private boolean saveVariablesInConfigFile(AdapterConfigFile configFile, AdapterConfigFileSaveDto savingProperties) {
+
+        logger.info(String.format("Замена переменных в файле %s...",
+                configFile.getConfigFile()));
+
+        Charset charset = StandardCharsets.UTF_8;
+        Path path = Paths.get(configFile.getConfigFile());
+
+        logger.info(String.format("Замена переменных в файле %s конфигурационными параметрами",
+                configFile.getConfigFile()));
+        Map<String, AdapterConfigFileProperty> confProperties = savingProperties.getConfFileProperties();
+        for (Map.Entry<String, AdapterConfigFileProperty> entry : confProperties.entrySet()) {
+            try {
+                logger.info(String.format("Замена переменной %s значением %s",
+                        entry.getKey(),
+                        entry.getValue().getPropertyValue().trim()));
+                String content = new String(Files.readAllBytes(path), charset);
+                logger.info(String.format("File content %n%s", content));
+                content = content.replaceAll(String.format("%s=.*",
+                        entry.getKey()),
+                        String.format("%s=%s", entry.getKey(),
+                                entry.getValue().getPropertyValue().trim()));
                 Files.write(path, content.getBytes(charset));
             } catch (IOException e) {
                 String error = "Ошибка при формировании и сохранении конфигурации в файл ";
@@ -998,6 +1033,14 @@ public class ApiController {
 
         }
         return propKeys;
+    }
+
+    public Result getAdapterEventsJson(@PathParam("id") Long id) {
+
+        AdapterEventsDto adapterEvents = adapterEventDao.getAllEventsByAdapterId(id);
+
+        return Results.json().render(adapterEvents);
+
     }
 
 }
