@@ -16,16 +16,13 @@
 
 package controllers;
 
-import static org.junit.Assert.assertTrue;
+import com.google.common.collect.Maps;
+import ninja.NinjaTest;
+import org.junit.Test;
 
 import java.util.Map;
 
-import ninja.NinjaTest;
-
-import org.junit.Before;
-import org.junit.Test;
-
-import com.google.common.collect.Maps;
+import static org.junit.Assert.assertTrue;
 
 public class LoginLogoutControllerTest extends NinjaTest {
 
@@ -38,7 +35,7 @@ public class LoginLogoutControllerTest extends NinjaTest {
         // Test posting of adapter does not work without login
         // /////////////////////////////////////////////////////////////////////
         String response = ninjaTestBrowser.makeRequest(getServerAddress()
-                + "adapter/new", headers);
+                + "adapter/1/new", headers);
         System.out.println(response);
         assertTrue(response.contains("Error. Forbidden."));
 
@@ -56,7 +53,7 @@ public class LoginLogoutControllerTest extends NinjaTest {
         // Test posting of adapter works when are logged in
         // /////////////////////////////////////////////////////////////////////
         response = ninjaTestBrowser.makeRequest(getServerAddress()
-                + "adapter/new", headers);
+                + "adapter/1/new", headers);
         
         assertTrue(response.contains("New adapter"));
 
@@ -69,7 +66,7 @@ public class LoginLogoutControllerTest extends NinjaTest {
         // Assert that posting of adapter does not work any more...
         // /////////////////////////////////////////////////////////////////////
         response = ninjaTestBrowser.makeRequest(getServerAddress()
-                + "adapter/new", headers);
+                + "adapter/1/new", headers);
         System.out.println(response);
         assertTrue(response.contains("Error. Forbidden."));
 

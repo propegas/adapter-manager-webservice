@@ -241,7 +241,7 @@ public class CamelIntegrationAction {
 
                 } else {
                     logger.debug("*** Add row to DB..." + adapterEventDao + adapterDao);
-                    AdapterEvent bbb = adapterEventDao.postAdapterEvent(adapterByName.id, errorEventMessage);
+                    AdapterEvent bbb = adapterEventDao.postAdapterEvent(adapterByName, errorEventMessage);
                     logger.debug("*** added row id: " + bbb.id);
                 }
             } else {

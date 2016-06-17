@@ -22,7 +22,8 @@ import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 import models.Adapter;
 import models.AdapterEvent;
-import models.AdapterEventsDto;
+import models.AdapterShortEvent;
+import models.AdapterShortEventsDto;
 import ninja.jpa.UnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,21 +45,109 @@ public class AdapterEventDao {
     AdapterDao adapterDao;
 
     @UnitOfWork
-    public AdapterEventsDto getAllEventsByAdapterId(Long adapterId) {
+    public AdapterShortEventsDto getAllEventsByAdapterId(Long adapterId,
+                                                         int pageSize,
+                                                         int pageNum,
+                                                         String orderByField,
+                                                         String order) {
 
         EntityManager entityManager = entityManagerProvider.get();
+        String orderBy;
+        switch (orderByField) {
+            case "message":
+                orderBy = "message";
+                break;
+            case "timestamp":
+                orderBy = "timestamp";
+                break;
+            default:
+                orderBy = "timestamp";
+                break;
+        }
 
-        TypedQuery<AdapterEvent> query = entityManager
-                .createQuery("SELECT x FROM AdapterEvent x where x.adapterId = :adapterId",
-                        AdapterEvent.class);
-        List<AdapterEvent> adapterEventList = query.setParameter("adapterId", adapterId)
-                .setFirstResult(0).setMaxResults(25).getResultList();
-        AdapterEventsDto adapterEventsDto = new AdapterEventsDto();
+        String orderDirection;
+        switch (order.toUpperCase()) {
+            case "ASC":
+                orderDirection = "ASC";
+                break;
+            case "DESC":
+                orderDirection = "DESC";
+                break;
+            default:
+                orderDirection = "DESC";
+                break;
+        }
+
+        TypedQuery<AdapterShortEvent> query = entityManager
+                .createQuery("SELECT x FROM AdapterShortEvent x " +
+                                "where x.adapterDetail.id = :adapterId " +
+                                "order by x." + orderBy + " " + orderDirection,
+                        AdapterShortEvent.class);
+        List<AdapterShortEvent> adapterEventList = query
+                .setParameter("adapterId", adapterId)
+                .setFirstResult((pageNum - 1) * pageSize)
+                .setMaxResults(pageSize)
+                .getResultList();
+        AdapterShortEventsDto adapterEventsDto = new AdapterShortEventsDto();
         adapterEventsDto.adapterEventList = adapterEventList;
 
         return adapterEventsDto;
 
     }
+
+
+    @UnitOfWork
+    public AdapterShortEventsDto getAllEvents(int pageSize,
+                                              int pageNum,
+                                              String orderByField,
+                                              String order) {
+
+        EntityManager entityManager = entityManagerProvider.get();
+        String orderBy;
+        switch (orderByField) {
+            case "message":
+                orderBy = "message";
+                break;
+            case "timestamp":
+                orderBy = "timestamp";
+                break;
+            default:
+                orderBy = "timestamp";
+                break;
+        }
+
+        String orderDirection;
+        switch (order.toUpperCase()) {
+            case "ASC":
+                orderDirection = "ASC";
+                break;
+            case "DESC":
+                orderDirection = "DESC";
+                break;
+            default:
+                orderDirection = "DESC";
+                break;
+        }
+
+        TypedQuery<AdapterShortEvent> query = entityManager
+                .createQuery("SELECT x FROM AdapterShortEvent x " +
+                                "join x.adapterDetail adapter " +
+                                "order by x." + orderBy + " " + orderDirection,
+                        AdapterShortEvent.class);
+        List<AdapterShortEvent> adapterEventList = query
+                .setFirstResult((pageNum - 1) * pageSize)
+                .setMaxResults(pageSize)
+                .getResultList();
+
+        //adapterEventList.get(0).getAdapterDetail().getName();
+
+        AdapterShortEventsDto adapterEventsDto = new AdapterShortEventsDto();
+        adapterEventsDto.adapterEventList = adapterEventList;
+
+        return adapterEventsDto;
+
+    }
+
 
     @UnitOfWork
     public AdapterEvent getEventById(Long id) {
@@ -81,7 +170,7 @@ public class AdapterEventDao {
 
         TypedQuery<AdapterEvent> query = entityManager
                 .createQuery("SELECT x FROM AdapterEvent x " +
-                                "where x.adapterId = :paramId " +
+                                "where x.adapterDetail.id = :paramId " +
                                 "and x.message = :paramMessage",
                         AdapterEvent.class);
 
@@ -112,17 +201,23 @@ public class AdapterEventDao {
     }
 
     @Transactional
-    public AdapterEvent postAdapterEvent(Long adapterId, ErrorMessage adapterEventDto) {
+    public AdapterEvent postAdapterEvent(Adapter adapterDb, ErrorMessage adapterEventDto) {
 
-        if (adapterId != null) {
+        if (adapterDb != null) {
 
             EntityManager entityManager = entityManagerProvider.get();
+
+
+            //adapterDb.setAdapterEvents(new ArrayList<AdapterEvent>());
+            //adapterDb.getAdapterEvents().add(adapterEvent);
 
             AdapterEvent adapterEvent = new AdapterEvent();
             adapterEvent.setRepeatCounter(adapterEventDto.getRepeatCounter());
             adapterEvent.setMessage(adapterEventDto.getMessage());
             adapterEvent.setTimestamp(adapterEventDto.getTimestamp());
-            adapterEvent.setAdapterId(adapterId);
+            adapterEvent.setAdapterDetail(adapterDb);
+            //adapterEvent.setAdapterId(adapterId);
+
             entityManager.persist(adapterEvent);
             entityManager.flush();
             //entityManager.getProperties().get()
@@ -143,7 +238,7 @@ public class AdapterEventDao {
         if (adapterId != null) {
             EntityManager entityManager = entityManagerProvider.get();
             Query selectAdapter = entityManager.createQuery("SELECT x FROM AdapterEvent x " +
-                    "WHERE x.adapterId = :idParam " +
+                    "WHERE x.adapterDetail.id = :idParam " +
                     "AND x.message = :messageParam");
             adapterEvent = (AdapterEvent) selectAdapter
                     .setParameter("idParam", adapterId)

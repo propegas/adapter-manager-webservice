@@ -2,13 +2,20 @@
 
 <template name="Zabbix Devices">
     <properties>
-        <property name="adaptersDirectoryFullPath" label="Путь к директории адаптеров" format=".*" defValue="/opt/adapters/zsm/adapters"/>
-        <property name="adapterDirectory" label="Директория адаптера" format=".*" defValue="camelZabbixDevicesMain" unique="true"/>
-        <property name="adapterFileName" label="Имя файла адаптера" format=".*\.jar$" defValue="camelZabbixDevices_main.jar" unique="true"/>
-        <property name="adapterTitle" label="Название" format=".*" defValue="Zabbix Devices Adapter Main" unique="true"/>
-        <property name="adapterName" label="Системное имя адаптера" format="[a-z]*" defValue="ZABBIX_DEVICE_ADAPTER_MAIN" unique="true"/>
-        <property name="adapterDescription" label="Описание" format=".*" defValue="Адаптер для сбора КЕ и связей между ними из Zabbix"/>
-        <property name="adapterShFileName" label="Файл управления" format=".*" defValue="ZabbixDevicesAdapter_main.sh" unique="true"/>
+        <property name="adaptersDirectoryFullPath" label="Путь к директории адаптеров" format=".*"
+                  defValue="/opt/adapters/zsm/adapters"/>
+        <property name="adapterDirectory" label="Директория адаптера" format=".*" defValue="camelZabbixDevicesMain"
+                  unique="true"/>
+        <property name="adapterFileName" label="Имя файла адаптера" format=".*\.jar$"
+                  defValue="camelZabbixDevices_main.jar" unique="true"/>
+        <property name="adapterTitle" label="Название" format=".*" defValue="Zabbix Devices Adapter Main"
+                  unique="true"/>
+        <property name="adapterName" label="Системное имя адаптера" format="[a-z]*"
+                  defValue="ZABBIX_DEVICE_ADAPTER_MAIN" unique="true"/>
+        <property name="adapterDescription" label="Описание" format=".*"
+                  defValue="Адаптер для сбора КЕ и связей между ними из Zabbix"/>
+        <property name="adapterShFileName" label="Файл управления" format=".*" defValue="ZabbixDevicesAdapter_main.sh"
+                  unique="true"/>
         <property name="mainLogFile" label="Лог-файл" format="^[\w,\s-]+\.[A-Za-z]{3}$" defValue="adapter.log"/>
         <property name="errorLogFile" label="Лог-файл ошибок" format="^[\w,\s-]+\.[A-Za-z]{3}$" defValue="errors.log"/>
     </properties>
@@ -16,16 +23,21 @@
         <source name="adapterLibsDir" type="dir" target="${adaptersDirectoryFullPath}/${adapterDirectory}">
             templates/zabbixDevicesAdapter/main
         </source>
-        <source name="adapterJarFile" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/${adapterFileName}">
+        <source name="adapterJarFile" type="file"
+                target="${adaptersDirectoryFullPath}/${adapterDirectory}/${adapterFileName}">
             templates/zabbixDevicesAdapter/extra/camelZabbixDevices.jar
         </source>
-        <source name="adapterShFile" type="file" target="${adaptersDirectoryFullPath}/${adapterShFileName}" executable="true">
+        <source configFileIdRef="2" name="adapterShFile" type="file"
+                target="${adaptersDirectoryFullPath}/${adapterShFileName}"
+                executable="true">
             templates/zabbixDevicesAdapter/extra/ZabbixDevicesAdapter.sh
         </source>
-        <source name="adapterLogProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/log4j.properties">
+        <source configFileIdRef="3" name="adapterLogProperties" type="file"
+                target="${adaptersDirectoryFullPath}/${adapterDirectory}/log4j.properties">
             templates/zabbixDevicesAdapter/extra/log4j.properties
         </source>
-        <source name="adapterMainProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/zabbixapi.properties">
+        <source configFileIdRef="1" name="adapterMainProperties" type="file"
+                target="${adaptersDirectoryFullPath}/${adapterDirectory}/zabbixapi.properties">
             templates/zabbixDevicesAdapter/extra/zabbixapi.properties
         </source>
         <configs>
@@ -37,7 +49,8 @@
     <mainConfigProperties>
         <mainConfigProperty id="1" name="title" description="description" format="format">${adapterTitle}
         </mainConfigProperty>
-        <mainConfigProperty id="2" name="content" description="description" format="format"><![CDATA[${adapterDescription}]]>
+        <mainConfigProperty id="2" name="content" description="description" format="format">
+            <![CDATA[${adapterDescription}]]>
         </mainConfigProperty>
         <mainConfigProperty id="3" name="jarFileName" description="description" format="format">${adapterFileName}
         </mainConfigProperty>
@@ -62,27 +75,27 @@
                     targetEncoding="ISO-8859-1"
                     description="Файл настроек параметров Zabbix">
             <confProperties>
-                <confProperty id="1" label="Период опроса" name="delay" format="^[0-9]{2,5}$">720</confProperty>
-                <confProperty id="2" label="URL API zabbix" name="zabbixapiurl" format=".*">
+                <confProperty id="1" label="Период опроса" name="delay" format="^[0-9]{1,5}$">720</confProperty>
+                <confProperty id="2" label="URL API zabbix" name="zabbixapiurl"
+                              format="^(https?:\/\/)?([\w\.0-9]+)(\/[\w\.]*)*\/?$">
                     http://172.20.19.195/zabbix/api_jsonrpc.php
                 </confProperty>
-                <confProperty id="3" label="Формат для поиска КЕ в элементах данных" name="zabbix_item_ke_search_pattern" format=".*">
-                    [*]*
-                </confProperty>
-                <confProperty id="4" label="Формат КЕ в элементах данных" name="zabbix_item_ke_pattern"
-                              format=".*"><![CDATA[\\[(.*)\\](.*)]]>
-                </confProperty>
-                <confProperty id="5" label="Формат записи связи между КЕ в элементах данных"
-                              name="zabbix_item_ci_parent_pattern" format=".*">(.*)::(.*)
-                </confProperty>
-                <confProperty id="6" label="Формат записи типа КЕ в элементах данных" name="zabbix_item_ci_type_pattern"
-                              format=".*"><![CDATA[\\((.*)\\)(.*)]]>
-                </confProperty>
+                <confProperty id="3" label="Логин" name="username" format=".*">Admin</confProperty>
+                <confProperty id="4" label="Пароль" name="password" format=".*">zabbix</confProperty>
                 <confProperty id="7" label="Частота отправки сигналов Heartbeat" name="heartbeatsdelay"
-                              format="^[0-9]{2}m$" globalConfig="true">${heartbeatsdelay}
+                              format="^[0-9]{1,2}m$" globalConfig="true">${heartbeatsdelay}
                 </confProperty>
                 <confProperty id="8" label="Очередь для отправки сигналов Heartbeat" name="heartbeatsqueue"
-                              format=".*" globalConfig="true">${heartbeatsqueue}
+                              format="^([\w]+)\.queue(\?)?([\w\.\-=\&amp;]+)?" globalConfig="true">${heartbeatsqueue}
+                </confProperty>
+                <confProperty id="9" label="Очередь для отправки ошибок адаптера" name="errorsqueue"
+                              format="^([\w]+)\.queue(\?)?([\w\.\-=\&amp;]+)?" globalConfig="true">${errorsqueue}
+                </confProperty>
+                <confProperty id="10" label="IP сервера ActiveMQ" name="activemq_ip"
+                              format="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$" globalConfig="true">${activemq_ip}
+                </confProperty>
+                <confProperty id="11" label="Порт сервера ActiveMQ" name="activemq_port" format="^[0-9]{2,5}$"
+                              globalConfig="true">${activemq_port}
                 </confProperty>
             </confProperties>
 
@@ -104,12 +117,15 @@
                     targetEncoding="UTF-8"
                     description="Файл настройки логирования">
             <confProperties>
-                <confProperty id="1" label="Уровень логирования" name="log_level" format="(^INFO$|^DEBUG$)">INFO</confProperty>
-                <confProperty id="2" label="Лог-файл" name="log_file" format="^[\w,\s-]+\.[A-Za-z]{3}$"
+                <confProperty id="1" label="Уровень логирования" name="log_level" format="(^INFO$|^DEBUG$)">INFO
+                </confProperty>
+                <confProperty id="2" label="Лог-файл (основной)" name="log_file" format="^[\w,\s-]+\.[A-Za-z]{3}$"
                               globalConfig="false">${mainLogFile}
                 </confProperty>
+                <confProperty id="3" label="Лог-файл (ошибки)" name="log_file_errors" format="^[\w,\s-]+\.[A-Za-z]{3}$"
+                              globalConfig="false">${errorLogFile}
+                </confProperty>
             </confProperties>
-
         </configFile>
     </configFiles>
 </template>

@@ -45,6 +45,8 @@ public class Source {
     protected String target;
     @XmlAttribute(name = "executable")
     private boolean executable;
+    @XmlAttribute(name = "configFileIdRef")
+    private String configFileIdRef;
 
     /**
      * Gets the value of the value property.
@@ -148,5 +150,13 @@ public class Source {
 
     public void setExecutable(boolean executable) {
         this.executable = executable;
+    }
+
+    public String getConfigFileIdRef() {
+        return configFileIdRef;
+    }
+
+    public void setConfigFileIdRef(String configFileIdRef) {
+        this.configFileIdRef = configFileIdRef;
     }
 }

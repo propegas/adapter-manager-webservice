@@ -1,5 +1,6 @@
 package models;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -15,6 +16,9 @@ public class AdapterTemplateProperty {
     private String propertyName;
     private String propertyValue;
     private String createdXmlFileId;
+
+    @Column(name = "Adapter_id")
+    private Long adapterId;
 
     public AdapterTemplateProperty() {
 // default constructor
@@ -58,5 +62,13 @@ public class AdapterTemplateProperty {
 
     public void setCreatedXmlFileId(String createdXmlFileId) {
         this.createdXmlFileId = createdXmlFileId;
+    }
+
+    public Long getAdapterId() {
+        return adapterId;
+    }
+
+    public void setAdapterId(Long adapterId) {
+        this.adapterId = adapterId;
     }
 }

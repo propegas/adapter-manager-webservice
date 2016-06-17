@@ -25,7 +25,6 @@ import dao.AdapterConfigFileDao;
 import dao.AdapterDao;
 import models.Adapter;
 import models.AdapterConfigFile;
-import models.AdapterConfigFileDto;
 import models.AdapterConfigFileSaveDto;
 import ninja.Context;
 import ninja.FilterWith;
@@ -96,6 +95,7 @@ public class ConfigFileController {
         return Results.html().render(ADAPTER, adapter);
     }
 
+    /*
     @FilterWith(SecureFilter.class)
     public Result configFileNewPost(@PathParam("id") Long adapterId,
                                     Context context,
@@ -111,7 +111,7 @@ public class ConfigFileController {
 
         } else {
 
-            adapterConfigFileDao.postConfigFile(adapterId, configFileDto);
+            adapterConfigFileDao.postConfigFile(adapterId, configFileDto, configFile.getId());
 
             context.getFlashScope().success("New adapter's config file added.");
 
@@ -120,6 +120,7 @@ public class ConfigFileController {
         }
 
     }
+    */
 
     @FilterWith(SecureFilter.class)
     public Result configFileRawView(@PathParam("id") Long adapterId,

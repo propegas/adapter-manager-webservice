@@ -44,6 +44,7 @@ import templates.ConfProperty;
 import templates.ConfigFile;
 import templates.MainConfigProperty;
 import templates.Property;
+import templates.Source;
 import templates.Template;
 
 import javax.xml.bind.JAXBContext;
@@ -152,9 +153,10 @@ public class ApiController {
 
     //@FilterWith(SecureFilter.class)
     public Result postAdapterJson(@LoggedInUser String username,
-                                  AdapterDto adapterDto) {
+                                  AdapterDto adapterDto,
+                                  @PathParam("templateId") Long templateId) {
 
-        Adapter createdAdapter = adapterDao.postAdapter(adapterDto);
+        Adapter createdAdapter = adapterDao.postAdapter(adapterDto, templateId);
         logger.debug(String.format("****Receive created adapter: %s,%nid: %d", createdAdapter, createdAdapter.id));
         if (createdAdapter.id == null) {
             return Results.notFound().render(RESULT_FIELD_NAME, "Error");
@@ -165,10 +167,12 @@ public class ApiController {
     }
 
     //@FilterWith(SecureFilter.class)
-    public Result postAdapterXml(@LoggedInUser String username,
-                                 AdapterDto adapterDto) {
 
-        Adapter createdAdapter = adapterDao.postAdapter(adapterDto);
+    public Result postAdapterXml(@LoggedInUser String username,
+                                 AdapterDto adapterDto,
+                                 @PathParam("templateId") Long templateId) {
+
+        Adapter createdAdapter = adapterDao.postAdapter(adapterDto, templateId);
 
         if (createdAdapter.id == null) {
             return Results.notFound();
@@ -177,6 +181,7 @@ public class ApiController {
         }
 
     }
+
 
     /*
     @Param("username") String username,
@@ -290,7 +295,8 @@ public class ApiController {
         logger.debug("[TEST] configFileDto: " + configFileDto);
         logger.debug("[TEST] adapterId: " + adapterId);
 
-        AdapterConfigFile createdConfigFile = configFileDao.postConfigFile(adapterId, configFileDto);
+        AdapterConfigFile createdConfigFile = configFileDao
+                .postConfigFile(adapterId, configFileDto, null);
         logger.debug(String.format("****Receive created config file: %s,%nid: %d",
                 createdConfigFile, createdConfigFile.getId()));
 
@@ -311,15 +317,18 @@ public class ApiController {
 
         AdapterConfigFile configFile = configFileDao.getConfigFile(adapterId, confId);
 
-        boolean replacePropertiesInFile = saveVariablesInConfigFile(configFile, configFileSaveDto);
+        boolean replacePropertiesInFile = saveVariablesInConfigFile(adapterId, configFile, configFileSaveDto);
+        if (!replacePropertiesInFile) {
+            return Results.badRequest().render(RESULT_FIELD_NAME, "Error");
+        }
 
         boolean saveConfigFile = configFileDao.saveConfigFile(adapterId, confId, configFileSaveDto);
 
         if (!saveConfigFile) {
             return Results.badRequest().render(RESULT_FIELD_NAME, "Error");
-        } else {
-            return Results.json().render(RESULT_FIELD_NAME, "Success");
         }
+
+        return Results.json().render(RESULT_FIELD_NAME, "Success");
 
     }
 
@@ -351,9 +360,7 @@ public class ApiController {
                     .render("Message", deleteResult.get("text"));
         }
 
-
     }
-
 
     ////////////////////////////////////////////////////////////////////////
     // Get Config File raw content
@@ -493,7 +500,7 @@ public class ApiController {
             return checkDirsResult;
 
         // check for unique
-        Result checkResult = checkPropertiesOnUniq();
+        Result checkResult = checkPropertiesOnUnique();
         if (checkResult != null)
             return checkResult;
 
@@ -539,7 +546,7 @@ public class ApiController {
         }
     }
 
-    private Result checkPropertiesOnUniq() {
+    private Result checkPropertiesOnUnique() {
         for (Property property : properties) {
             logger.info("property: " + property);
             if (property.isUnique()) {
@@ -706,7 +713,7 @@ public class ApiController {
         resultMessage += "Директория с адаптером создана. ";
 
         // create adapter in DB
-        Adapter createdAdapter = createAdapterFromXml(template);
+        Adapter createdAdapter = createAdapterFromXml(template, templateId);
 
         if (createdAdapter == null) {
             return Results.badRequest().json()
@@ -733,7 +740,8 @@ public class ApiController {
 
             configFileDto.setConfFileProperties(configFileKeys);
             //logger.info(configFile.getConfProperties());
-            AdapterConfigFile createdConfFile = configFileDao.postConfigFile(createdAdapter.id, configFileDto);
+            AdapterConfigFile createdConfFile = configFileDao
+                    .postConfigFile(createdAdapter.id, configFileDto, configFile.getId());
             if (createdConfFile == null) {
                 // delete adapter
                 adapterDao.deleteAdapter(createdAdapter.id, createdAdapter);
@@ -767,7 +775,7 @@ public class ApiController {
         resultMessage += "Конфигурационные файлы созданы. ";
 
         // save Properties in DB
-        adapterTemplatePropertyDao.postProperties(fileId, properties);
+        adapterTemplatePropertyDao.postProperties(fileId, properties, createdAdapter.id);
 
         resultMessage += "Параметры шаблона сохранены. ";
 
@@ -870,42 +878,98 @@ public class ApiController {
         return true;
     }
 
-    private boolean saveVariablesInConfigFile(AdapterConfigFile configFile, AdapterConfigFileSaveDto savingProperties) {
+    private boolean saveVariablesInConfigFile(Long adapterId, AdapterConfigFile configFile,
+                                              AdapterConfigFileSaveDto savingProperties) {
 
         logger.info(String.format("Замена переменных в файле %s...",
                 configFile.getConfigFile()));
 
-        Charset charset = StandardCharsets.UTF_8;
-        Path path = Paths.get(configFile.getConfigFile());
+        Adapter adapter = adapterDao.getAdapter(configFile.getAdapterId());
+        Long temlateId = adapter.templateIds.get(0);
+        AdapterTemplate adapterTemplate = adapterTemplateDao.getAdapterTemplateById(temlateId);
+        Template templateXml = initTemplate(adapterTemplate.getTemplateXmlPath());
+        List<Source> sourceList = templateXml.getSources().getSource();
+        for (Source source : sourceList) {
+            String idRefFromXml = source.getConfigFileIdRef();
+            String idRefFromDb = configFile.getConfigFileXmlId();
 
-        logger.info(String.format("Замена переменных в файле %s конфигурационными параметрами",
-                configFile.getConfigFile()));
-        Map<String, AdapterConfigFileProperty> confProperties = savingProperties.getConfFileProperties();
-        for (Map.Entry<String, AdapterConfigFileProperty> entry : confProperties.entrySet()) {
-            try {
-                logger.info(String.format("Замена переменной %s значением %s",
-                        entry.getKey(),
-                        entry.getValue().getPropertyValue().trim()));
-                String content = new String(Files.readAllBytes(path), charset);
-                logger.info(String.format("File content %n%s", content));
-                content = content.replaceAll(String.format("%s=.*",
-                        entry.getKey()),
-                        String.format("%s=%s", entry.getKey(),
-                                entry.getValue().getPropertyValue().trim()));
-                Files.write(path, content.getBytes(charset));
-            } catch (IOException e) {
-                String error = "Ошибка при формировании и сохранении конфигурации в файл ";
-                logger.error(error, e);
-                return false;
+            logger.debug("***** idRefFromXml : " + idRefFromXml);
+            logger.debug("***** idRefFromDb : " + idRefFromDb);
+
+            if (idRefFromXml != null && idRefFromXml.equalsIgnoreCase(idRefFromDb)) {
+                String pathFrom = source.getValue();
+                String pathTo = configFile.getConfigFile();
+
+                File sourceFile = new File(pathFrom);
+                File destFile = new File(pathTo);
+
+                logger.debug(String.format("Копируем файл %s в файл %s ...",
+                        sourceFile, destFile));
+
+                // set executable
+                try {
+                    FileUtils.copyFile(sourceFile, destFile);
+                    if (source.isExecutable())
+                        destFile.setExecutable(true);
+                } catch (IOException e) {
+
+                    String errorText = String.format("Ошибка при копировании файла %s в %s ",
+                            sourceFile, destFile);
+                    logger.error(errorText, e);
+                    //map.put("text", errorText + e);
+                    //map.put("result", false);
+                    //return map;
+                    return false;
+                }
+
+                Charset charset = StandardCharsets.UTF_8;
+                // TODO add charset select from xml or DB attributes
+
+                Path path = Paths.get(pathTo);
+
+                logger.info(String.format("Замена переменных в файле %s параметрами шаблона",
+                        configFile.getConfigFile()));
+                List<AdapterTemplateProperty> adapterDbProperties = adapterTemplatePropertyDao.getPropertiesByAdapterId(adapterId);
+                for (AdapterTemplateProperty adapterDbProperty : adapterDbProperties) {
+                    try {
+                        String content = new String(Files.readAllBytes(path), charset);
+                        content = content.replaceAll(String.format("\\$\\{%s\\}",
+                                adapterDbProperty.getPropertyName()),
+                                adapterDbProperty.getPropertyValue().trim());
+                        Files.write(path, content.getBytes(charset));
+                    } catch (IOException e) {
+                        String error = "Ошибка при формировании и сохранении конфигурации в файл ";
+                        logger.error(error, e);
+                        return false;
+                    }
+                }
+
+                logger.info(String.format("Замена переменных в файле %s конфигурационными параметрами",
+                        configFile.getConfigFile()));
+
+                Map<String, AdapterConfigFileProperty> confProperties = savingProperties.getConfFileProperties();
+                for (Map.Entry<String, AdapterConfigFileProperty> entry : confProperties.entrySet()) {
+                    try {
+                        String content = new String(Files.readAllBytes(path), charset);
+                        content = content.replaceAll(String.format("\\$\\{%s\\}",
+                                entry.getKey()),
+                                entry.getValue().getPropertyValue().trim());
+                        Files.write(path, content.getBytes(charset));
+                    } catch (IOException e) {
+                        String error = "Ошибка при формировании и сохранении конфигурации в файл ";
+                        logger.error(error, e);
+                        return false;
+                    }
+
+                }
+
             }
-
-            //configFilePropertyDao.
         }
 
         return true;
     }
 
-    private Adapter createAdapterFromXml(Template template) {
+    private Adapter createAdapterFromXml(Template template, Long templateId) {
         List<MainConfigProperty> propertyList = template.getMainConfigProperties().getMainConfigProperty();
         HashMap<String, MainConfigProperty> propKeys = null;
         try {
@@ -927,9 +991,12 @@ public class ApiController {
         adapterDto.stopCommands = propKeys.get("stopCommands").getValue().trim();
         adapterDto.logFile = propKeys.get("logFile").getValue().trim();
         adapterDto.errorLogFile = propKeys.get("errorLogFile").getValue().trim();
+
+        logger.debug("******adapter name from template: " + propKeys.get("name").getValue().trim());
+        adapterDto.name = propKeys.get("name").getValue().trim();
         // adapterDto.status = propKeys.get("content").getValue();
 
-        return adapterDao.postAdapter(adapterDto);
+        return adapterDao.postAdapter(adapterDto, templateId);
     }
 
     private ConfigFile getConfigFileFromListById(List<ConfigFile> configFiles, String confId) {
@@ -1035,9 +1102,27 @@ public class ApiController {
         return propKeys;
     }
 
-    public Result getAdapterEventsJson(@PathParam("id") Long id) {
+    public Result getAdapterEventsJson(@PathParam("id") Long adapterId,
+                                       @Param("page_size") int pageSize,
+                                       @Param("page") int pageNum,
+                                       @Param("order_by") String orderByField,
+                                       @Param("order_direction") String orderDirection) {
 
-        AdapterEventsDto adapterEvents = adapterEventDao.getAllEventsByAdapterId(id);
+        AdapterShortEventsDto adapterEvents = adapterEventDao
+                .getAllEventsByAdapterId(adapterId, pageSize, pageNum, orderByField, orderDirection);
+
+        return Results.json().render(adapterEvents);
+
+    }
+
+    public Result getAllAdapterEventsJson(@Param("page_size") int pageSize,
+                                          @Param("page") int pageNum,
+                                          @Param("order_by") String orderByField,
+                                          @Param("order_direction") String orderDirection) {
+
+        AdapterShortEventsDto adapterEvents = adapterEventDao
+                .getAllEvents(pageSize, pageNum, orderByField, orderDirection);
+        //adapterEvents.adapterEventList.get(0).get
 
         return Results.json().render(adapterEvents);
 

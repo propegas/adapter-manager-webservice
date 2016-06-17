@@ -7,12 +7,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import java.util.Date;
 
 @Entity
-public class AdapterEvent {
+@Table(name = "adapterevent")
+public class AdapterShortEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,13 +32,13 @@ public class AdapterEvent {
     @ManyToOne()
     @JoinColumn(name = "adapter_id", insertable = false, updatable = false,
             nullable = false)
-    private Adapter adapterDetail;
+    private AdapterShort adapterDetail;
 
-    public AdapterEvent() {
+    public AdapterShortEvent() {
 
     }
 
-    public AdapterEvent(Long timestamp, String message) {
+    public AdapterShortEvent(Long timestamp, String message) {
         this.timestamp = new Date(timestamp * 1000);
         this.message = message;
         this.repeatCounter = 0;
@@ -77,11 +79,11 @@ public class AdapterEvent {
         this.repeatCounter = repeatCounter;
     }
 
-    public Adapter getAdapterDetail() {
+    public AdapterShort getAdapterDetail() {
         return adapterDetail;
     }
 
-    public void setAdapterDetail(Adapter adapterDetail) {
+    public void setAdapterDetail(AdapterShort adapterDetail) {
         this.adapterDetail = adapterDetail;
     }
 

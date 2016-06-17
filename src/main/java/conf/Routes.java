@@ -61,8 +61,8 @@ public class Routes implements ApplicationRoutes {
         ///////////////////////////////////////////////////////////////////////
         // Create new adapter
         ///////////////////////////////////////////////////////////////////////
-        router.GET().route("/adapter/new").with(AdapterController.class, "adapterNew");
-        router.POST().route("/adapter/new").with(AdapterController.class, "adapterNewPost");
+        router.GET().route("/adapter/{templateId}/new").with(AdapterController.class, "adapterNew");
+        router.POST().route("/adapter/{templateId}/new").with(AdapterController.class, "adapterNewPost");
 
         ///////////////////////////////////////////////////////////////////////
         // Duplicate new adapter from existing
@@ -115,13 +115,14 @@ public class Routes implements ApplicationRoutes {
         router.GET().route("/adapter-api/adapters").with(ApiController.class, "getAdaptersJson");
         router.GET().route("/adapter-api/adapter/{id}/get").with(ApiController.class, "getAdapterJson");
         router.GET().route("/adapter-api/adapters.xml").with(ApiController.class, "getAdaptersXml");
-        router.POST().route("/adapter-api/adapter/new").with(ApiController.class, "postAdapterJson");
+        //router.POST().route("/adapter-api/adapter/new").with(ApiController.class, "postAdapterJson");
         router.POST().route("/adapter-api/adapter.xml").with(ApiController.class, "postAdapterXml");
         router.GET().route("/adapter-api/adapter/{id}/log").with(ApiController.class, "getAdapterLogJson");
         router.POST().route("/adapter-api/adapter/{id}/manage").with(ApiController.class, "adapterManagePost");
         router.DELETE().route("/adapter-api/adapter/{id}/delete").with(ApiController.class, "adapterDeletePost");
         //
         router.GET().route("/adapter-api/adapter/{id}/events").with(ApiController.class, "getAdapterEventsJson");
+        router.GET().route("/adapter-api/adapters/events").with(ApiController.class, "getAllAdapterEventsJson");
         // config files
         router.GET().route("/adapter-api/adapter/{id}/configfiles").with(ApiController.class, "getConfigFilesJson");
         router.GET().route("/adapter-api/adapter/{id}/configfile/{confid}").with(ApiController.class, "getConfigFileJson");
@@ -148,7 +149,7 @@ public class Routes implements ApplicationRoutes {
         // New adapter config file
         ///////////////////////////////////////////////////////////////////////
         router.GET().route("/adapter/{id}/configfile/new").with(ConfigFileController.class, "configFileNew");
-        router.POST().route("/adapter/{id}/configfile/new").with(ConfigFileController.class, "configFileNewPost");
+        //router.POST().route("/adapter/{id}/configfile/new").with(ConfigFileController.class, "configFileNewPost");
 
         ///////////////////////////////////////////////////////////////////////
         // Get raw config file

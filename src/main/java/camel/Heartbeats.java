@@ -71,7 +71,6 @@ public class Heartbeats {
             return heartbeat.getHeartbeatStatus();
         }
 
-
     }
 
     public void addHeartbeatMessage(Heartbeat heartbeat) {

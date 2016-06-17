@@ -27,6 +27,8 @@ public class AdapterConfigFile {
     @CollectionTable(name = "AdapterConfigFile_keys", joinColumns = @JoinColumn(name = "AdapterConfigFile_id"))
     private List<AdapterConfigFileProperty> configFilePropertyList = new ArrayList<>();
 
+    private String configFileXmlId;
+
     public AdapterConfigFile() {
 // default constructor
         this.id = null;
@@ -77,5 +79,13 @@ public class AdapterConfigFile {
 
     public void setConfigFilePropertyList(List<AdapterConfigFileProperty> configFilePropertyList) {
         this.configFilePropertyList = configFilePropertyList;
+    }
+
+    public String getConfigFileXmlId() {
+        return configFileXmlId;
+    }
+
+    public void setConfigFileXmlId(String configFileXmlId) {
+        this.configFileXmlId = configFileXmlId;
     }
 }

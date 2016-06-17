@@ -58,8 +58,8 @@ public class AdapterTemplatePropertyDao {
 
         TypedQuery<AdapterTemplateProperty> query = entityManager
                 .createQuery("SELECT x FROM TemplateProperty x " +
-                        "where x.propertyName = :propertyNameParam " +
-                        "and x.propertyValue = :propertyValueParam",
+                                "where x.propertyName = :propertyNameParam " +
+                                "and x.propertyValue = :propertyValueParam",
                         AdapterTemplateProperty.class);
 
         return query
@@ -69,8 +69,47 @@ public class AdapterTemplatePropertyDao {
 
     }
 
+    @UnitOfWork
+    public List<AdapterTemplateProperty> getPropertiesByAdapterId(Long adapterId) {
+
+        EntityManager entityManager = entityManagerProvider.get();
+
+        TypedQuery<AdapterTemplateProperty> query = entityManager
+                .createQuery("SELECT x FROM TemplateProperty x " +
+                                "where x.adapterId = :adapterIdParam ",
+                        AdapterTemplateProperty.class);
+
+        return query
+                .setParameter("adapterIdParam", adapterId)
+                .getResultList();
+
+    }
+
+    @UnitOfWork
+    public AdapterTemplateProperty getPropertiesByAdapterIdAndPropertyName(Long adapterId, String propertyName) {
+
+        EntityManager entityManager = entityManagerProvider.get();
+
+        TypedQuery<AdapterTemplateProperty> query = entityManager
+                .createQuery("SELECT x FROM TemplateProperty x " +
+                                "where x.adapterId = :adapterIdParam " +
+                                "and  x.propertyName = :propertyNameParam",
+                        AdapterTemplateProperty.class);
+
+        try {
+            return query
+                    .setParameter("adapterIdParam", adapterId)
+                    .setParameter("propertyNameParam", propertyName)
+                    .getSingleResult();
+        } catch (Exception e) {
+            logger.error("Property not found in DB", e);
+            return null;
+        }
+
+    }
+
     @Transactional
-    public boolean postProperties(String xmlFileId, List<Property> properties) {
+    public boolean postProperties(String xmlFileId, List<Property> properties, Long adapterId) {
         EntityManager entityManager = entityManagerProvider.get();
 
         if (properties.isEmpty()) {
@@ -81,6 +120,7 @@ public class AdapterTemplatePropertyDao {
 
         for (Property property : properties) {
             AdapterTemplateProperty templateProperty = new AdapterTemplateProperty(property.getName(), property.getValue(), xmlFileId);
+            templateProperty.setAdapterId(adapterId);
             entityManager.persist(templateProperty);
         }
 

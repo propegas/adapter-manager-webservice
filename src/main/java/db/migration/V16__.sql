@@ -1,0 +1,2 @@
+ALTER TABLE adapterevent
+ALTER COLUMN adapter_id DROP NOT NULL

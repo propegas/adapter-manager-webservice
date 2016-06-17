@@ -119,7 +119,7 @@ public class AdapterConfigFileDao {
     }
 
     @Transactional
-    public AdapterConfigFile postConfigFile(Long adapterId, AdapterConfigFileDto configFileDto) {
+    public AdapterConfigFile postConfigFile(Long adapterId, AdapterConfigFileDto configFileDto, String confFileId) {
         EntityManager entityManager = entityManagerProvider.get();
         EntityTransaction transaction = entityManager.getTransaction();
 
@@ -136,6 +136,7 @@ public class AdapterConfigFileDao {
 
         AdapterConfigFile configFile = new AdapterConfigFile(adapterId, configFileDto.configFile);
         configFile.setConfigDescription(configFileDto.getConfigDescription());
+        configFile.setConfigFileXmlId(confFileId);
 
         //configFileEntity.getConfProperties()
         List<AdapterConfigFileProperty> keyList = new ArrayList<>();

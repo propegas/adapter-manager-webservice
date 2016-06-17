@@ -56,9 +56,9 @@ public class ApiControllerMockTest {
 
         Adapter adapter = mock(Adapter.class);
         adapter.id = 123L;
-        when(adapterDao.postAdapter(null)).thenReturn(adapter);
-        
-        Result result = apiController.postAdapterJson(null, null);
+        when(adapterDao.postAdapter(null, null)).thenReturn(adapter);
+
+        Result result = apiController.postAdapterJson(null, null, null);
         
         assertEquals(200, result.getStatusCode());
 
@@ -68,9 +68,9 @@ public class ApiControllerMockTest {
     public void testThatPostAdapterReturnsNotFoundWhenAdapterDaoReturnsFalse() {
 
         Adapter adapter = mock(Adapter.class);
-        when(adapterDao.postAdapter(null)).thenReturn(adapter);
+        when(adapterDao.postAdapter(null, null)).thenReturn(adapter);
 
-        Result result = apiController.postAdapterJson(null, null);
+        Result result = apiController.postAdapterJson(null, null, null);
         
         assertEquals(404, result.getStatusCode());
 
@@ -82,7 +82,7 @@ public class ApiControllerMockTest {
         adapterConfigFile.setId(123L);
        //verify(adapterConfigFile).setId(1L);
 
-        when(configFileDao.postConfigFile(null, null)).thenReturn(adapterConfigFile);
+        when(configFileDao.postConfigFile(null, null, null)).thenReturn(adapterConfigFile);
 
         Result result = apiController.postConfigFileJson(null, null);
 

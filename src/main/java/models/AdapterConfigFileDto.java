@@ -34,4 +34,5 @@ public class AdapterConfigFileDto {
     public void setConfFileProperties(Map<String, AdapterConfigFileProperty> confFileProperties) {
         this.confFileProperties = confFileProperties;
     }
+
 }

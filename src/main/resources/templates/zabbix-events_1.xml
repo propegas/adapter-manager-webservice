@@ -23,16 +23,20 @@
         <source name="adapterLibsDir" type="dir" target="${adaptersDirectoryFullPath}/${adapterDirectory}">
             templates/zabbixEventsAdapter/main
         </source>
-        <source name="adapterJarFile" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/${adapterFileName}">
+        <source name="adapterJarFile" type="file"
+                target="${adaptersDirectoryFullPath}/${adapterDirectory}/${adapterFileName}">
             templates/zabbixEventsAdapter/extra/camelZabbix.jar
         </source>
-        <source name="adapterShFile" type="file" target="${adaptersDirectoryFullPath}/${adapterShFileName}" executable="true">
+        <source name="adapterShFile" type="file" target="${adaptersDirectoryFullPath}/${adapterShFileName}"
+                executable="true">
             templates/zabbixEventsAdapter/extra/ZabbixEventsAdapter.sh
         </source>
-        <source name="adapterLogProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/log4j.properties">
+        <source name="adapterLogProperties" type="file"
+                target="${adaptersDirectoryFullPath}/${adapterDirectory}/log4j.properties">
             templates/zabbixEventsAdapter/extra/log4j.properties
         </source>
-        <source name="adapterMainProperties" type="file" target="${adaptersDirectoryFullPath}/${adapterDirectory}/zabbixapi.properties">
+        <source name="adapterMainProperties" type="file"
+                target="${adaptersDirectoryFullPath}/${adapterDirectory}/zabbixapi.properties">
             templates/zabbixEventsAdapter/extra/zabbixapi.properties
         </source>
         <configs>
@@ -76,24 +80,29 @@
                               format="^(https?:\/\/)?([\w\.0-9]+)(\/[\w\.]*)*\/?$">
                     http://172.20.19.195/zabbix/api_jsonrpc.php
                 </confProperty>
-                <confProperty id="3" label="Префикс действий (action) в Zabbix" name="zabbixactionprefix"
+                <confProperty id="3" label="Логин" name="username" format=".*">Admin</confProperty>
+                <confProperty id="4" label="Пароль" name="password" format=".*">zabbix</confProperty>
+                <confProperty id="5" label="Префикс действий (action) в Zabbix" name="zabbixactionprefix"
                               format="^[\w\.\-0-9]+">
                     Trigger.Log.XML
                 </confProperty>
-                <confProperty id="4" label="URL (Namespace) в структуре XML (action)" name="zabbixactionxmlns"
-                              format="^(https?:\/\/)?([\w\.0-9]+)(\/[\w\.]*)*\/?$">http://monis.nso.ru/
-                </confProperty>
-                <confProperty id="5" label="Формат шаблонов Zabbix для выявления типа событий"
-                              name="zabbixtemplatepattern" format=".*">.*--(.*)--.*
-                </confProperty>
-                <confProperty id="6" label="Формат групп хостов для выявления сервиса" name="zabbix_group_ci_pattern"
-                              format=".*"><![CDATA[\\((.*)\\)(.*)]]>
+                <confProperty id="6" label="URL (Namespace) в структуре XML (action)" name="zabbixactionxmlns"
+                              format="^(https?:\/\/)?([\w\.0-9]+)(\/[\w\.]*)*\/?$">http://skuf.gosuslugi.ru/mon/
                 </confProperty>
                 <confProperty id="7" label="Частота отправки сигналов Heartbeat" name="heartbeatsdelay"
                               format="^[0-9]{2}m$" globalConfig="true">${heartbeatsdelay}
                 </confProperty>
                 <confProperty id="8" label="Очередь для отправки сигналов Heartbeat" name="heartbeatsqueue"
-                              format="^([\w]+)\.queue(\?)?([\w\.\-=\&]+)" globalConfig="true">${heartbeatsqueue}
+                              format="^([\w]+)\.queue(\?)?([\w\.\-=\&]+)?" globalConfig="true">${heartbeatsqueue}
+                </confProperty>
+                <confProperty id="9" label="Очередь для отправки ошибок адаптера" name="errorsqueue"
+                              format="^([\w]+)\.queue(\?)?([\w\.\-=\&]+)?" globalConfig="true">${errorsqueue}
+                </confProperty>
+                <confProperty id="10" label="IP сервера ActiveMQ" name="activemq.ip"
+                              format="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$" globalConfig="true">${activemq_ip}
+                </confProperty>
+                <confProperty id="11" label="Порт сервера ActiveMQ" name="activemq.port" format="^[0-9]{2,5}$"
+                              globalConfig="true">${activemq_port}
                 </confProperty>
             </confProperties>
 
@@ -115,9 +124,13 @@
                     targetEncoding="UTF-8"
                     description="Файл настройки логирования">
             <confProperties>
-                <confProperty id="1" label="Уровень логирования" name="log_level" format="(^INFO$|^DEBUG$)">INFO</confProperty>
-                <confProperty id="2" label="Лог-файл" name="log_file" format="^[\w,\s-]+\.[A-Za-z]{3}$"
+                <confProperty id="1" label="Уровень логирования" name="log_level" format="(^INFO$|^DEBUG$)">INFO
+                </confProperty>
+                <confProperty id="2" label="Лог-файл (основной)" name="log_file" format="^[\w,\s-]+\.[A-Za-z]{3}$"
                               globalConfig="false">${mainLogFile}
+                </confProperty>
+                <confProperty id="3" label="Лог-файл (ошибки)" name="log_file_errors" format="^[\w,\s-]+\.[A-Za-z]{3}$"
+                              globalConfig="false">${errorLogFile}
                 </confProperty>
             </confProperties>
 

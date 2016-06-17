@@ -21,6 +21,7 @@ import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 import models.Adapter;
 import models.AdapterDto;
+import models.AdapterTemplate;
 import models.AdaptersDto;
 import models.UserAuth;
 import ninja.jpa.UnitOfWork;
@@ -94,11 +95,18 @@ public class AdapterDao {
      * Returns false if user cannot be found in database.
      */
     @Transactional
-    public Adapter postAdapter(AdapterDto adapterDto) {
+    public Adapter postAdapter(AdapterDto adapterDto, Long templateId) {
 
         EntityManager entityManager = entityManagerProvider.get();
 
-        Adapter adapter = new Adapter(adapterDto.title, adapterDto.content, adapterDto.jarFileName);
+        Query query = entityManager.createQuery("SELECT x FROM AdapterTemplate x WHERE x.id = :idParam");
+        AdapterTemplate template = (AdapterTemplate) query.setParameter("idParam", templateId).getSingleResult();
+
+        if (template == null) {
+            return null;
+        }
+
+        Adapter adapter = new Adapter(adapterDto.title, adapterDto.content, adapterDto.jarFileName, template.getId());
         adapter.setStatus("Unknown");
         adapter.setJarFilePath(adapterDto.jarFilePath);
         adapter.setCheckStatusCommands(adapterDto.checkStatusCommands);
