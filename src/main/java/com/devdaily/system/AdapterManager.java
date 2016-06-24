@@ -75,7 +75,6 @@ public class AdapterManager {
         logger.info(String.format("STDOUT: %s", stdout));
         logger.info(String.format("STDERR: %s", stderr));
 
-
         return new String[]{stdout.toString(), stderr.toString()};
 
     }

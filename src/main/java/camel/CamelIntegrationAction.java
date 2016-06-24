@@ -240,8 +240,9 @@ public class CamelIntegrationAction {
                     adapterEventDao.updateExistedAdapterEvent(adapterByName.id, errorEventMessage);
 
                 } else {
+                    logger.debug("*** Message not found in DB...");
                     logger.debug("*** Add row to DB..." + adapterEventDao + adapterDao);
-                    AdapterEvent bbb = adapterEventDao.postAdapterEvent(adapterByName, errorEventMessage);
+                    AdapterEvent bbb = adapterEventDao.postAdapterEvent(adapterByName.id, errorEventMessage);
                     logger.debug("*** added row id: " + bbb.id);
                 }
             } else {

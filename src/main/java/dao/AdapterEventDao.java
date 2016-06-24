@@ -29,8 +29,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AdapterEventDao {
@@ -80,7 +82,8 @@ public class AdapterEventDao {
 
         TypedQuery<AdapterShortEvent> query = entityManager
                 .createQuery("SELECT x FROM AdapterShortEvent x " +
-                                "where x.adapterDetail.id = :adapterId " +
+                                "join x.adapterDetail adapter " +
+                                "where adapter.id = :adapterId " +
                                 "order by x." + orderBy + " " + orderDirection,
                         AdapterShortEvent.class);
         List<AdapterShortEvent> adapterEventList = query
@@ -94,7 +97,6 @@ public class AdapterEventDao {
         return adapterEventsDto;
 
     }
-
 
     @UnitOfWork
     public AdapterShortEventsDto getAllEvents(int pageSize,
@@ -168,9 +170,11 @@ public class AdapterEventDao {
 
         EntityManager entityManager = entityManagerProvider.get();
 
+        logger.debug(String.format("******* Check message '%s' for adapterId %d", message.getMessage(), adapterId));
         TypedQuery<AdapterEvent> query = entityManager
                 .createQuery("SELECT x FROM AdapterEvent x " +
-                                "where x.adapterDetail.id = :paramId " +
+                                "join x.adapterDetail adapter " +
+                                "where adapter.id = :paramId " +
                                 "and x.message = :paramMessage",
                         AdapterEvent.class);
 
@@ -201,25 +205,40 @@ public class AdapterEventDao {
     }
 
     @Transactional
-    public AdapterEvent postAdapterEvent(Adapter adapterDb, ErrorMessage adapterEventDto) {
+    public AdapterEvent postAdapterEvent(Long adapterDbId, ErrorMessage adapterEventDto) {
 
-        if (adapterDb != null) {
+        if (adapterDbId != null) {
 
             EntityManager entityManager = entityManagerProvider.get();
 
+            Query selectAdapter = entityManager.createQuery("" +
+                    "SELECT x FROM Adapter x WHERE x.id = :adapIdParam");
+            Adapter adapterDb = (Adapter) selectAdapter
+                    .setParameter("adapIdParam", adapterDbId)
+                    .getSingleResult();
 
-            //adapterDb.setAdapterEvents(new ArrayList<AdapterEvent>());
-            //adapterDb.getAdapterEvents().add(adapterEvent);
+            if (adapterDb == null) {
+                String errorMessage = CONFIG_FILE_IDS_NOT_FOUND;
+                logger.error(errorMessage, new NoResultException());
+                return null;
+            }
 
+            logger.debug("****** adapter id for new event: " + adapterDb.id);
             AdapterEvent adapterEvent = new AdapterEvent();
             adapterEvent.setRepeatCounter(adapterEventDto.getRepeatCounter());
             adapterEvent.setMessage(adapterEventDto.getMessage());
             adapterEvent.setTimestamp(adapterEventDto.getTimestamp());
-            adapterEvent.setAdapterDetail(adapterDb);
+            logger.debug("****** adapter object for new event: " + adapterDb);
+            //adapterEvent.setAdapterDetail(adapterDb);
+            //adapterEvent.getAdapterDetail().
             //adapterEvent.setAdapterId(adapterId);
-
+            adapterDb.setAdapterEvents(new ArrayList<AdapterEvent>());
+            adapterDb.getAdapterEvents().add(adapterEvent);
             entityManager.persist(adapterEvent);
-            entityManager.flush();
+            //entityManager.flush();
+            //entityManager.refresh(adapterDb);
+            //entityManager.persist(adapterEvent);
+            //entityManager.flush();
             //entityManager.getProperties().get()
 
             return adapterEvent;
@@ -238,7 +257,8 @@ public class AdapterEventDao {
         if (adapterId != null) {
             EntityManager entityManager = entityManagerProvider.get();
             Query selectAdapter = entityManager.createQuery("SELECT x FROM AdapterEvent x " +
-                    "WHERE x.adapterDetail.id = :idParam " +
+                    "join x.adapterDetail adapter " +
+                    "WHERE adapter.id = :idParam " +
                     "AND x.message = :messageParam");
             adapterEvent = (AdapterEvent) selectAdapter
                     .setParameter("idParam", adapterId)
